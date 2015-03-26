@@ -1,0 +1,11 @@
+{
+  "name": "ops-dashboard",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "python -m SimpleHTTPServer 5000"
+  },
+  "author": "",
+  "license": "ISC"
+}
