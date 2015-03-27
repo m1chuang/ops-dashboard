@@ -79,9 +79,10 @@
 
             <qbcontrol if={item.type==1}></qbcontrol>
             <a id="close_edit" onclick={parent.close_edit}>close</a>
+            <a id="refresh" onclick={parent.refresh}>refresh</a>
           </div>
 
-          <raw content="{ item.content_html }"/>
+          <raw content="{ item.content_html }" data-raw="{ item.content_raw}"/>
           <a id="edit" onclick={parent.edit}>edit</a>
         </div>
       </li>
@@ -92,7 +93,7 @@
   <script>
 
     this.grid ={
-      items :opts.items,
+      items :opts.items || [],
       currentSize:opts.size,
       cols: 0,
       num_items:0,
@@ -112,6 +113,12 @@
       $('li#'+e.item.i+" .controls").hide();
     };
 
+    refresh(e){
+      $('li#'+e.item.i+" raw")[0].innerHTML = eval($('li#'+e.item.i+" raw").attr('data-raw'));
+      console.log($('li#'+e.item.i+" raw").attr('data-raw'));
+      console.log(eval($('li#'+e.item.i+" raw").attr('data-raw')));
+    }
+
     add(e) {
       var _empty_right=0, _x=0;
       $('.block').each(function(i, item){
@@ -128,7 +135,7 @@
         x: _empty_right,
         y: 0,
         type:parseInt(this.block_type.value,10),
-        content_html:create_table(incident_table)
+        content_html:""
       };
 
       this.grid.items.push(itemData);
@@ -157,9 +164,16 @@
         }
       });
       console.log('Grid updating');
-
+      console.log(this.grid.items)
     });
 
+    subscribe("block:render",function(params){
+      console.log("block:render");
+      var block_data = JSON.parse(window.localStorage.getItem("block_data_"+params.block_id));
+      console.log(block_data);
+      console.log(params);
+      $('li#'+params.block_id+" raw")[0].innerHTML = eval($('li#'+params.block_id+" raw").attr('data-raw'));
+    });
   </script>
 </grid>
 

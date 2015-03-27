@@ -16,6 +16,7 @@
         transform: translateX(-50%);
         top:20%;
         height:60%;
+        width:60%;
         font-family:monospace !important;
       }
       #close_btn{
@@ -44,7 +45,9 @@
     editor.setTheme("ace/theme/monokai");
     editor.getSession().setMode("ace/mode/javascript");
     editor.container.style.fontFamily = "monospace"
+    $('#editor_panel').drags();
   });
+
   </script>
 
 </editor>
