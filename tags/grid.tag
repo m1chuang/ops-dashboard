@@ -36,6 +36,10 @@
       font-weight: bold;
       padding: 2px;
     }
+    #close_edit{
+      color:red;
+    }
+
   </style>
 
   <div class="header">
@@ -68,7 +72,7 @@
         <div class="inner"></div>
       </li>
 
-      <li class="block" each={ item, i in grid.items } id={i} data-w="{item.w}" data-h="{item.h}" data-x="{item.x}" data-y="{item.y}" >
+      <li class="block" each={ item, i in items } id={i} data-w="{item.position.w}" data-h="{item.position.h}" data-x="{item.position.x}" data-y="{item.position.y}" >
         <div class="inner">
           <div class="controls">
             <label for="new_block_h">width
@@ -80,6 +84,7 @@
             <qbcontrol if={item.type==1}></qbcontrol>
             <a id="close_edit" onclick={parent.close_edit}>close</a>
             <a id="refresh" onclick={parent.refresh}>refresh</a>
+            <a id="code" onclick={parent.code}>code</a>
           </div>
 
           <raw content="{ item.content_html }" data-raw="{ item.content_raw}"/>
@@ -91,19 +96,14 @@
   </div>
 
   <script>
-
-    this.grid ={
-      items :opts.items || [],
-      currentSize:opts.size,
-      cols: 0,
-      num_items:0,
-      data:{}
-    };
+    var self = this;
+    self.items =opts.items || [];
+    self.currentSize=opts.size;
 
     resize(e){
-      this.grid.items[e.item.i].w=$(e.currentTarget).data('size');
-      this.update()
-    }
+      self.items[e.item.i].w=$(e.currentTarget).data('size');
+      self.update()
+    };
 
     edit(e){
       $('li#'+e.item.i+" .controls").show();
@@ -114,10 +114,17 @@
     };
 
     refresh(e){
+
+      var block = window.localStorage.getItem("block_"+e.item.i);
+      rc.trigger("api:"+block.api,{});
+      var block_data = JSON.parse(window.localStorage.getItem("block_data_"+e.item.i));
+      console.log(e.item);
       $('li#'+e.item.i+" raw")[0].innerHTML = eval($('li#'+e.item.i+" raw").attr('data-raw'));
-      console.log($('li#'+e.item.i+" raw").attr('data-raw'));
-      console.log(eval($('li#'+e.item.i+" raw").attr('data-raw')));
-    }
+    };
+
+    code(e){
+      rc.trigger("editor:show",{item:e.item.item});
+    };
 
     add(e) {
       var _empty_right=0, _x=0;
@@ -129,50 +136,69 @@
       });
 
       var itemData={
-        id:this.grid.num_items,
-        w: parseInt(this.new_block_w.value,10),
-        h: parseInt(this.new_block_h.value,10),
-        x: _empty_right,
-        y: 0,
+        id:this.items.length,
+        position:{
+          w: parseInt(this.new_block_w.value,10),
+          h: parseInt(this.new_block_h.value,10),
+          x: _empty_right,
+          y: 0
+        },
         type:parseInt(this.block_type.value,10),
-        content_html:""
+        content_html:"",
+        data_process:{}
       };
-
-      this.grid.items.push(itemData);
-      this.grid.num_items=this.grid.num_items+1;
-      this.update();
+      rc.trigger('block:add',itemData);
+      //this.grid.items.push(itemData);
+      //this.grid.num_items=this.grid.num_items+1;
       $('.grid-container').scrollLeft($('.grid-container').width());
     }
 
     this.on('mount',function(){
       console.log('Grid mounting');
+      this.update();
     });
 
     this.on('update',function(data){
-      this.grid.items = (data)? data.items : this.grid.items;
-      var item_ary = this.grid.item_array;
       $('#items').gridList({
-        rows: this.grid.currentSize,
+        rows: this.currentSize,
         widthHeightRatio: 264 / 294,
         heightToFontSizeRatio: 0.2,
         onChange: function(changedItems) {
           changedItems.forEach(function(item, i){
             $("li#" + item.$element.context.id).attr('data-x', item.x );
             $("li#" + item.$element.context.id).attr('data-y', item.y);
+            rc.trigger('block:position:update',[{
+              id:item.$element.context.id,
+              position:{
+                x:item.x,
+                y:item.y,
+                w:item.w,
+                h:item.h
+              }
+            }]);
           });
 
         }
       });
       console.log('Grid updating');
-      console.log(this.grid.items)
     });
 
-    subscribe("block:render",function(params){
-      console.log("block:render");
-      var block_data = JSON.parse(window.localStorage.getItem("block_data_"+params.block_id));
-      console.log(block_data);
-      console.log(params);
-      $('li#'+params.block_id+" raw")[0].innerHTML = eval($('li#'+params.block_id+" raw").attr('data-raw'));
+    rc.on('block:change',function(items){
+      items.forEach(function(item,i){
+        if(self.items[item.id]){
+          self.items[item.id]=item;
+        }else{
+          self.items.push(item);
+        }
+      });
+      console.log("block:change");
+      console.log(items);
+      self.update();
+      self.update();
+    });
+
+    rc.on('block:render',function(block_id){
+      self.update();
     });
   </script>
 </grid>
