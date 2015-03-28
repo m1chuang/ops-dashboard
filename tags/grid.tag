@@ -39,7 +39,13 @@
     #close_edit{
       color:red;
     }
-
+    .block_header {
+  padding: 0.5em;
+  font-size: 1.5em !important;
+  color: white;
+  text-align: left;
+  background: rgb(236, 170, 83);
+}
   </style>
 
   <div class="header">
@@ -57,12 +63,17 @@
       <option value="1">1</option>
       <option value="2">2</option>
       <option value="3" selected>3</option>
+      <option value="4">4</option>
+      <option value="5">5</option>
+      <option value="6">6</option>
     </select>
     <label for="block_type">type</label>
     <select name="block_type">
       <option value="1" selected>quickBase</option>
-      <option value="2">Form</option>
-      <option value="3">Form</option>
+      <option value="2">freeform</option>
+      <option value="3">list</option>
+      <option value="4">pageDuty</option>
+      <option value="5">Jira</option>
     </select>
     <!-- end of add block control -->
   </div>
@@ -74,19 +85,21 @@
 
       <li class="block" each={ item, i in items } id={i} data-w="{item.position.w}" data-h="{item.position.h}" data-x="{item.position.x}" data-y="{item.position.y}" >
         <div class="inner">
+          <!-- block control -->
           <div class="controls">
             <label for="new_block_h">width
               <a href="#zoom1" onclick={parent.resize}  data-size="1">1x</a>
               <a href="#zoom2" onclick={parent.resize}  data-size="2">2x</a>
               <a href="#zoom3" onclick={parent.resize} data-size="3">3x</a>
             </label>
-
             <qbcontrol if={item.type==1}></qbcontrol>
             <a id="close_edit" onclick={parent.close_edit}>close</a>
             <a id="refresh" onclick={parent.refresh}>refresh</a>
             <a id="code" onclick={parent.code}>code</a>
           </div>
-
+          <!-- end of block control -->
+          <div contenteditable="true" class="block_header">{item.header}</div>
+          <p contenteditable="true" if={item.type==2}>{"add content" || item.content_html}</p>
           <raw content="{ item.content_html }" data-raw="{ item.content_raw}"/>
           <a id="edit" onclick={parent.edit}>edit</a>
         </div>
@@ -225,3 +238,7 @@
   </form>
 
 </qbcontrol>
+
+<list>
+
+</list>

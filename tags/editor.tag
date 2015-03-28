@@ -50,8 +50,8 @@
   <script>
   var self = this;
   self.show_editor=false;
-  self.editor=""
-
+  self.editor="";
+  self.data={};
   close(e){
     self.show_editor=false;
   }
@@ -72,6 +72,7 @@
 
   rc.on("editor:show",function(params){
     console.log(params)
+    self.data = params.item;
     self.editor.setValue(params.item.data_process.success);
     self.show_editor=true;
     self.update();

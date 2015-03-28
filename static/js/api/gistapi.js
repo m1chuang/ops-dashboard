@@ -30,6 +30,9 @@ $.ajax({
 			rc.trigger('block:build', dashboard_data.blocks[key]);
 		}
 
+		setTimeout(function() {
+			rc.trigger('block:all');
+		}, 500);
 		console.log(err)
 	}
 });
