@@ -92,7 +92,7 @@
               <a href="#zoom2" onclick={parent.resize}  data-size="2">2x</a>
               <a href="#zoom3" onclick={parent.resize} data-size="3">3x</a>
             </label>
-            <qbcontrol if={item.type==1}></qbcontrol>
+
             <a id="close_edit" onclick={parent.close_edit}>close</a>
             <a id="refresh" onclick={parent.refresh}>refresh</a>
             <a id="code" onclick={parent.code}>code</a>
@@ -220,24 +220,6 @@
   <span></span>
   this.root.innerHTML = opts.content
 </raw>
-
-<qbcontrol>
-  <form>
-    <label for="new_block_h">months
-      <input name="months"></input>
-    </label>
-    <label for="new_block_h">query
-      <input name="query"></input>
-    </label>
-    <label for="new_block_h">clist
-      <input name="clist"></input>
-    </label>
-    <label for="new_block_h">slist
-      <input name="slist"></input>
-    </label>
-  </form>
-
-</qbcontrol>
 
 <list>
 

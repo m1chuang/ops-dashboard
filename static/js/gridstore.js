@@ -54,6 +54,12 @@ function gridStore() {
 		});
 	});
 
+	self.on('editor:save', function(params) {
+		console.log('editor:save');
+		console.log(params.data);
+		console.log(params.code);
+	})
+
 	self.on('block:all', function() {
 		//console.log(self.blocks);
 		//console.log(JSON.stringify(self.blocks.toJSON()));

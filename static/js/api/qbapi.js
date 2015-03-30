@@ -13,7 +13,7 @@ var qbapi = function(params) {
       success: success
     });
   }; //eof get
-  if (!this.auth_ticket) {
+  if (true) {
     this.get("https://" + params.domain +
       "/db/main?a=API_Authenticate&username=mchuang&password=Nesh6502&hours=48", (
         function(data) {
@@ -38,7 +38,7 @@ var aims = new qbapi({
   domain: "intuitcorp.quickbase.com",
   dbId: "54xa5xi4",
   appToken: "ek8d4acxepjmubgkjiypb6nkh9q",
-  auth_ticket: "7_bjtvyta5g_b2fvy4_k_a_m65h42e356nmcp5cw98bbkjj5nt8yqnqdq4yjdrd98fkymdqszbf8"
+  auth_ticket: "7_bjt5xmeyd_b2fvy4_k_a_cqg3rk7c2d72ukb6eks87bjncuhdcvjymzrfsiz42bw2wzdnd42sng4"
 })
 
 var incident_table = {};
@@ -58,7 +58,11 @@ rc.on("api:qb:query:incidents", function(params) {
     ],
     success: function(data) {
       console.log("SUCCESS on qbapi");
-      params.success(data, params.block_id, params.next);
+      if (params.success && params.next && !params.result_only) {
+        params.success(data, params.block_id, params.next);
+      } else if (params.result_only) {
+        params.result_only(data);
+      }
     }
   });
 })

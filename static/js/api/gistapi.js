@@ -23,7 +23,8 @@ y=gist.fetch('80cffc4fb8dfab253d6b');
 
 $.ajax({
 	type: "GET",
-	url: "https://api.github.com/gists/" + '80cffc4fb8dfab253d6b',
+	url: "https://api.github.com/gists/" + '80cffc4fb8dfab253d6b' +
+		'?access_token=625321acea99ec66170597ac3a029cab9199396e',
 	success: function(data, err) {
 		var dashboard_data = JSON.parse(data.files.dashboard_data_processing.content);
 		for (key in dashboard_data.blocks) {
