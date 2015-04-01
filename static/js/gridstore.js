@@ -65,4 +65,54 @@ function gridStore() {
 		//console.log(JSON.stringify(self.blocks.toJSON()));
 		rc.trigger('block:change', self.blocks.toArray());
 	});
+
+	self.on('dashboard:save', function() {
+		//console.log(self.blocks);
+		console.log(JSON.stringify(self.blocks.toJSON()));
+		//rc.trigger('block:change', self.blocks.toArray());
+		$.ajax({
+			url: 'https://api.github.com/gists/80cffc4fb8dfab253d6b',
+			type: 'PATCH',
+			beforeSend: function(xhr) {
+				xhr.setRequestHeader("Authorization",
+					"token 625321acea99ec66170597ac3a029cab9199396e");
+			},
+			data: JSON.stringify({
+				"description": "updated gist via ajax",
+				"public": true,
+				"files": {
+					"dashboard_data_processing": {
+						"content": JSON.stringify({
+							data: {},
+							blocks: self.blocks.toArray()
+						})
+					}
+				}
+			})
+		}).done(function(response) {
+			console.log(response);
+		});
+	});
+
+
+	self.on('api:general', function(params) {
+		console.log('api:general');
+		console.log(params);
+		var methods = ['GET', 'POST', 'PUT'];
+		eval(params.before_send);
+		$.ajax({
+			type: params.method,
+			url: params.domain,
+			data: params.query,
+			beforeSend: beforesend,
+			success: function(data) {
+				console.log("SUCCESS on general api");
+				if (params.success && params.next && !params.result_only) {
+					params.success(data, params.block_id, params.next);
+				} else if (params.result_only) {
+					params.result_only(data);
+				}
+			}
+		});
+	})
 }

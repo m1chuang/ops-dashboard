@@ -25,7 +25,7 @@
         width:60%;
         font-family:monospace !important;
         width: 83em;
-        height: 29em;
+        height: 44em;
       }
       #editor_panel a{
         position:absolute;
@@ -73,13 +73,14 @@
   <div id="editor_panel" show={show_editor} hide={!show_editor}>
     <a id="code_btn" onclick={show_code}>Data Processing</a>
     <a id="api_btn" onclick={show_api}>API</a>
-    <div id="editor" show={(tab==1)}>{code}{o}</div>
+    <div name="processing" id="editor" show={(tab==1)}></div>
     <div id="apipanel" show={(tab==2)}>
-      <qbcontrol params={ data.data_process } if={true}></qbcontrol>
+      <api params={ data.data_process } show={(type==0 || type==99)} ></api>
+      <qbcontrol params={ data.data_process } show={(type==1 || type==99)} ></qbcontrol>
     </div>
     <a id="drag">drag</a>
-    <a id="close_btn"onclick={close}>x</a>
-    <a id="save_btn"onclick={save}>save</a>
+    <a id="close_btn" onclick={close}>x</a>
+    <a id="save_btn" onclick={save}>save</a>
   </div>
 
   <script>
@@ -87,10 +88,13 @@
   var self = this;
   self.show_editor=false;
   self.tab=1;
-  self.editor="";
+  self.editor_processing=ace.edit(this.processing);;
+  self.editor_processing.setTheme("ace/theme/monokai");
+  self.editor_processing.getSession().setMode("ace/mode/javascript");
+  self.editor_processing.container.style.fontFamily = "monospace"
+  $('#editor_panel').drags({handle:"#drag"});
   self.data={};
-
-
+  self.type = 99;
   close(e){
     self.show_editor=false;
   }
@@ -103,21 +107,18 @@
 
   self.on('update, mount',function(){
     console.log('editor mounting');
-    var editor = ace.edit("editor");
-    editor.setTheme("ace/theme/monokai");
-    editor.getSession().setMode("ace/mode/javascript");
-    editor.container.style.fontFamily = "monospace"
-    self.editor=editor;
-    $('#editor_panel').drags({handle:"#drag"});
   });
 
   save(e){
-    rc.trigger("editor:save",{data:self.data, code:self.editor.getValue()});
+    rc.trigger("editor:save",{data:self.data, code:self.editor_processing.getValue()});
+    console.log(this.data);
   }
 
   rc.on("editor:show",function(params){
+    console.log(params.item);
     self.data = params.item;
-    self.editor.setValue(params.item.data_process.success);
+    self.type = params.item.type;
+    if(self.editor_processing) self.editor_processing.setValue(params.item.data_process.success);
     self.show_editor=true;
     self.update();
   });
@@ -125,10 +126,29 @@
 
 </editor>
 
-<qbcontrol>
+
+
+
+
+
+
+
+
+<api>
   <style>
+    form{
+      padding:10px;
+      font-size:1.2em;
+    }
     textarea{
-      width:90%;
+      width:100%;
+    }
+    label{
+      margin-top:5px;
+      margin-bottom:5px;
+    }
+    #damain{
+
     }
     f {
       width: 100%;
@@ -138,54 +158,248 @@
     #api_result{
       background:white;
     }
+    #editor_panel a{
+      position:absolute;
+      background: white;
+      border: 1px solid black;
+      cursor: pointer;
+      color: red;
+      padding:5px;
+      font-size: 2em;
+    }
+    #beforesend, #payload{
+      height:5em;
+    }
+    #domain{
+      width:90% !important;
+    }
+    #method{
+      width:9% !important;
+    }
   </style>
-  <div id="api_calll">
-    {url}
-  </div>
-  <form>
-    <label for="new_block_h">months
-      <textarea name="months">{String(data.month || "")}</textarea>
+
+  <form onload={update_url} >
+    <label id="method"><b>HTTP method</b>
+      <textarea name="method" onkeyup={update_url}>{data.method}</textarea>
     </label>
-    <label for="new_block_h">query
-      <textarea name="query">{String(data.field_raw || "")}</textarea>
+    <label id="domain"><b>Domain</b>
+      <textarea name="domain" onkeyup={update_url}>{data.domain}</textarea>
     </label>
-    <label for="new_block_h">clist
-      <textarea name="clist">{String(data.extra || "")}</textarea>
+    <label><b>Payload</b>
+      <div name="payload" id="payload" onkeyup={update_url}></div>
     </label>
-    <label for="new_block_h">slist
-      <textarea name="slist">{String(data.slist || "")}</textarea>
+    <label><b>BeforeSend (Headers, MIME, etc)</b>
+      <div name="beforesend" id="beforesend" onkeyup={update_url}></div>
     </label>
-  </form>
-  <a id="run" onclick={run}>Test</a>
-  <div id="api_result"></div>
+    <label><b>RAW URL</b>
+    <p id="raw_url" name="raw_url">{ data.method+":"+ data.domain }</p>
+    </label>
+    <p id="unsaved_api" show={(!saved)} hide={(saved)}>unsaved changes: API {saved}</p>
+    <a id="run" onclick={run}>Test</a>
+  </api>
+
+  <div name="api_result1" id="api_result1"></div>
   <script>
   var self = this;
+  var original =  jQuery.extend({}, opts.params);
   this.data = opts.params;
 
-  toggle_result(e){
 
+  this.editor_result = ace.edit(this.api_result1);
+  this.editor_beforesend = ace.edit(this.beforesend);
+  //editor_beforesend.setTheme("ace/theme/monokai");
+  this.editor_beforesend.getSession().setMode("ace/mode/javascript");
+  this.editor_beforesend.container.style.fontFamily = "monospace";
+  this.editor_data = ace.edit(this.payload);
+  //editor_beforesend.setTheme("ace/theme/monokai");
+  this.editor_data.container.style.fontFamily = "monospace";
+  self.saved = true;
+
+  update_url(e){
+    this.data.domain = this.domain.value || "";
+    this.data.method = this.domain.method || "";
+    this.data.query = this.editor_data.getValue() || "";
+    this.data.before_send = this.editor_beforesend.getValue() || "";
+    for( key in original){
+      if(!original[key]){
+      }else if(original[key]!=this.data[key]){
+        console.log("unsaved changes");
+        console.log(original[key]);
+        console.log(this.data[key]);
+        self.saved = false;
+      }
+    }
+    this.update();
   }
 
   run(e){
-    rc.trigger("api:qb:query:incidents",{
-      field_raw: this.query.value,
-      extra: this.clist.value + this.slist.value,
+    console.log(this.data);
+    rc.trigger("api:general",{
+      method: this.method.value,
+      query:  this.editor_data.getValue(),
+      before_send:  this.editor_beforesend.getValue(),
+      domain:       this.domain.value,
+      result_only:function(data){
+        console.log('success on result_only callback');
+        console.log(JSON.stringify(data));
+        self.editor_result.setValue(data);
+      }
+    });
+  }
+
+  this.on('mount',function(){
+    console.log('mounting api panel');
+  });
+  this.on('update',function(){
+    console.log('update api panel');
+    console.log(original);
+    console.log(self.data);
+    console.log(self.saved);
+    if(self.editor_beforesend && self.data)self.editor_beforesend.setValue(self.data.before_send || "var beforesend = function(xhr){\n};");
+    original =  self.saved? jQuery.extend({}, opts.params):original;
+    self.data=opts.params;
+  });
+  rc.on("editor:save",function(params){
+    console.log('saving api panel editor..');
+    self.saved = true;
+    original =  self.saved? jQuery.extend({}, self.data):original;
+  });
+  rc.on("editor:show",function(params){    
+  });
+  </script>
+</api>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<qbcontrol>
+  <style>
+    form{
+      padding:10px;
+      font-size:1.2em;
+    }
+    textarea{
+      width:100%;
+    }
+    label{
+      margin-top:5px;
+      margin-bottom:5px;
+    }
+    #damain{
+
+    }
+    f {
+      width: 100%;
+      display: inline-block;
+      margin-left: 10px;
+    }
+    #api_result{
+      background:white;
+    }
+    #editor_panel a{
+      position:absolute;
+      background: white;
+      border: 1px solid black;
+      cursor: pointer;
+      color: red;
+      padding:5px;
+      font-size: 2em;
+    }
+  </style>
+  <form>
+    <label><b>Domain</b>
+      <p id="domain">{data.domain}</p>
+    </label>
+
+    <label><b>Api type</b>
+      <textarea name="api_type" onkeyup={update_url} >{data.api_type}</textarea>
+    </label>
+    <label><b>DB id</b>
+      <textarea name="db_id" onkeyup={update_url} >{data.db_id}</textarea>
+    </label>
+    <label><b>App token</b>
+      <textarea name="app_token" onkeyup={update_url} >{data.app_token}</textarea>
+    </label>
+    <label><b>Auth ticket</b>
+      <textarea name="auth_ticket" onkeyup={update_url} >{data.auth_ticket}</textarea>
+    </label>
+    <label><b>Query</b>
+      <textarea name="query" onkeyup={update_url} >{data.query}</textarea>
+    </label>
+    <label><b>RAW URL</b>
+      <p id="raw_url" name="raw_url">{ data.domain + "/db/" + data.db_id + "?a="+data.api_type+"&apptoken="+data.app_token}<br>{'&ticket='+data.auth_ticket+"&"+ data.query}</p>
+    </label>
+
+    <p id="unsaved_api" hide={!saved}>unsaved changes: API</p>
+    <a id="run" onclick={run}>Test</a>
+  </form>
+
+  <div id="api_result"></div>
+  <script>
+  var self = this;
+  var original =  jQuery.extend({}, opts.params);
+  this.data = opts.params;
+  var saved = true;
+
+  //this.url = this.data.domain +'/'+ this.data.app_id || ''; //+ "?a="+this.data.api_type+"&apptoken="+this.data.app_token+'&ticket='+this.data.auth_ticket+"&"+ this.data.query;
+
+  update_url(e){
+    this.data.api_type = this.api_type.value;
+    this.data.db_id = this.db_id.value;
+    this.data.app_token = this.app_token.value;
+    this.data.auth_ticket = this.auth_ticket.value;
+    this.data.query = this.query.value;
+    console.log('original');
+    console.log(original);
+    console.log(this.data);
+    saved = true;
+    for( key in original){
+      if(original[key]!=this.data[key]){
+        console.log("unsaved changes");
+        saved = false;
+      }
+    }
+    this.update();
+  }
+
+  run(e){
+    rc.trigger("api:qb",{
+      data: this.data,
       result_only:function(data){
         console.log('success on result_only callback');
         $('#api_result')[0].innerHTML = $(data).find('records')[0].innerHTML;
         $( "f" ).has( "f" ).addClass( "expandable" );
       }
-
-
     });
   }
 
   this.on('mount',function(){
-
+    original =  jQuery.extend({}, opts.params);
   });
   this.on('update',function(){
-    
+    console.log('update api panel')
+    console.log(saved);
+    original =  saved? jQuery.extend({}, opts.params):original;
     self.data=opts.params;
+  });
+  rc.on("editor:show",function(params){
+    console.log('qc params.item');
   })
   </script>
 </qbcontrol>

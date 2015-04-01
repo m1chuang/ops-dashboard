@@ -46,6 +46,11 @@
   text-align: left;
   background: rgb(236, 170, 83);
 }
+  #save_dashboard{
+    background: white;
+    border: 1px solid black;
+    cursor: pointer;
+  }
   </style>
 
   <div class="header">
@@ -70,11 +75,12 @@
     <label for="block_type">type</label>
     <select name="block_type">
       <option value="1" selected>quickBase</option>
-      <option value="2">freeform</option>
+      <option value="0">freeform</option>
       <option value="3">list</option>
       <option value="4">pageDuty</option>
       <option value="5">Jira</option>
     </select>
+    <a onclick={save_dashboard}>Save edit</a>
     <!-- end of add block control -->
   </div>
   <div class="grid-container">
@@ -125,7 +131,9 @@
     close_edit(e){
       $('li#'+e.item.i+" .controls").hide();
     };
-
+    save_dashboard(e){
+      rc.trigger('dashboard:save');
+    }
     refresh(e){
 
       var block = window.localStorage.getItem("block_"+e.item.i);
@@ -222,5 +230,4 @@
 </raw>
 
 <list>
-
 </list>
