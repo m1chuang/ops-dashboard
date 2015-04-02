@@ -11,6 +11,10 @@
         height:100%;
         width: 100%;
       }
+      raw{
+        width: 100%;
+        height: 90%;
+        }
       #editor_panel{
 
         top: 0;
@@ -36,14 +40,19 @@
         padding:5px;
         font-size: 2em;
       }
-      #close_btn, #save_btn{
+      #close_btn, #save_btn, #apply_btn{
         right: -1.3em;
         top:0;
       }
 
       #save_btn{
         top:2em;
-        right: -3.1em;
+        right: -3.2em;
+      }
+
+      #apply_btn{
+        top:5em;
+        right: -3.9em;
       }
       div#apipanel {
         width: 100%;
@@ -53,7 +62,7 @@
         top:-1.7em;
       }
       #run_btn{
-        left:18em;
+        left:20em;
       }
       #api_btn{
         top:-1.7em;
@@ -75,17 +84,19 @@
 
   <div id="editor_panel" show={show_editor} hide={!show_editor}>
     <a id="code_btn" onclick={show_code}>Data Processing</a>
-    <a id="run_btn" onclick={run_processing}>run</a>
-    <a id="api_btn" onclick={show_api}>API</a>
+    <a id="run_btn" show={(type!=3 || type==99)} onclick={run_processing}>run</a>
+    <a id="api_btn" onclick={show_api}>Request</a>
     <div name="processing" id="editor" show={(tab==1)} onkeyup={update_changes}></div>
     <div id="apipanel" show={(tab==2)}>
       <api name="api" params={ data.data_process } show={(type==0 || type==99)} ></api>
       <qbcontrol params={ data.data_process } show={(type==1 || type==99)} ></qbcontrol>
+      <imagecontrol params={ data.data_process } show={(type==3 || type==99)}><imagecontrol>
     </div>
     <div name="preview" show={(tab==3)}></div>
     <a id="drag">drag</a>
     <a id="close_btn" onclick={close}>x</a>
     <a id="save_btn" onclick={save}>save</a>
+    <a id="apply_btn" onclick={ type==3 ? apply_static : apply_dynamic }>apply</a>
   </div>
 
   <script>
@@ -119,8 +130,33 @@
     rc.trigger("editor:save",{data:self.data, code:self.editor_processing.getValue()});
     console.log(this.data);
   }
-
+  apply_static(e){
+    console.log("apply static...");
+    console.log(self.data.data_process.content_html);
+    //console.log($('li#'+self.data.id+" raw")[0].innerHTML)
+    var html = "<div style='height: 90%; background-image: url("+self.data.data_process.image_src+"); background-size: cover; background-position: 50% 50%; background-repeat: no-repeat;'></div>"
+    self.data.data_process.content_html = html;
+    self.data.content_html = html;
+    $('li#'+self.data.id+" raw")[0].innerHTML=html;
+    self.update();
+  }
+  apply_dynamic(e){
+    rc.trigger("api:general",{
+      method: self.data.data_process.method,
+      query:  self.data.data_process.query,
+      before_send:  self.data.data_process.before_send,
+      domain:       self.data.data_process.domain,
+      success: self.data.data_process.success,
+      next: function(table){
+        $('li#'+self.data.id+" raw")[0].innerHTML=create_table(table);
+        self.data.data_process.content_html = create_table(table);
+        self.update();
+        console.log($(self.preview)[0].innerHTML);
+      }
+    });
+  }
   run_processing(e){
+    console.log('run processing...')
     console.log(self.data.data_process)
     self.tab=3;
     rc.trigger("api:general",{
@@ -138,8 +174,9 @@
 
   }
 
-  self.on('update, mount',function(){
+  self.on('mount',function(){
     console.log('editor mounting');
+    $('#editor_panel').drags({handle:"#drag"});
   });
 
   rc.on("editor:show",function(params){
@@ -268,6 +305,7 @@
 
   run(e){
     console.log(this.data);
+    console.log("running");
     rc.trigger("api:general",{
       method: this.method.value,
       query:  this.editor_data.getValue(),
@@ -289,8 +327,6 @@
     console.log(original);
     console.log(self.data);
     console.log(self.saved);
-    if(self.editor_beforesend && self.data)self.editor_beforesend.setValue(self.data.before_send || "var beforesend = function(xhr){\n};");
-    if(self.data && self.data.query)self.editor_data.setValue(self.data.query || "");
     original =  self.saved? jQuery.extend({}, opts.params):original;
     self.data=opts.params;
   });
@@ -300,6 +336,8 @@
     original =  self.saved? jQuery.extend({}, self.data):original;
   });
   rc.on("editor:show",function(params){
+    if(self.editor_beforesend && self.data)self.editor_beforesend.setValue(self.data.before_send || "var beforesend = function(xhr){\n};");
+    if(self.data && self.data.query)self.editor_data.setValue(self.data.query || "");
   });
   </script>
 </api>
@@ -438,6 +476,68 @@
   })
   </script>
 </qbcontrol>
+
+
+
+
+
+
+<imagecontrol>
+  <style>
+
+  </style>
+  <form>
+
+    <label><b>src</b>
+      <textarea name="image_src" onkeyup={update_url} >{data.image_src}</textarea>
+    </label>
+
+    <p id="unsaved_api" hide={!saved}>unsaved changes: SRC</p>
+    <a id="run" onclick={run}>Test</a>
+  </form>
+
+  <div name="image_result"></div>
+  <script>
+  var self = this;
+  var original =  jQuery.extend({}, opts.params);
+  this.data = opts.params;
+  var saved = true;
+
+  //this.url = this.data.domain +'/'+ this.data.app_id || ''; //+ "?a="+this.data.api_type+"&apptoken="+this.data.app_token+'&ticket='+this.data.auth_ticket+"&"+ this.data.query;
+
+  update_url(e){
+    this.data.image_src = this.image_src.value;
+    saved = true;
+    for( key in original){
+      if(original[key]!=this.data[key]){
+        console.log("unsaved changes");
+        saved = false;
+      }
+    }
+    this.update();
+  }
+
+  run(e){
+    self.data.content_html = "<img src='"+self.data.image_src+"'>";
+    $(this.image_result)[0].innerHTML="<img src='"+self.data.image_src+"'>";
+  }
+
+  this.on('mount',function(){
+    original =  jQuery.extend({}, opts.params);
+  });
+  this.on('update',function(){
+    console.log('update api panel')
+    console.log(saved);
+    original =  saved? jQuery.extend({}, opts.params):original;
+    self.data=opts.params;
+  });
+  rc.on("editor:show",function(params){
+    console.log('qc params.item');
+  })
+  </script>
+</imagecontrol>
+
+
 
 <raw>
   <span></span>

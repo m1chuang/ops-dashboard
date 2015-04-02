@@ -51,6 +51,10 @@
     border: 1px solid black;
     cursor: pointer;
   }
+  button{
+    height: 100%;
+  margin-left: 1em;
+}
   </style>
 
   <div class="header">
@@ -77,11 +81,12 @@
     <select name="block_type">
       <option value="1" selected>quickBase</option>
       <option value="0">freeform</option>
-      <option value="3">list</option>
+      <option value="3">image</option>
       <option value="4">pageDuty</option>
       <option value="5">Jira</option>
     </select>
-    <a onclick={save_dashboard}>Save edit</a>
+    <button onclick={save_dashboard} >Save edit</button>
+    <button id="edit" onclick={edit} >edit</button>
     <!-- end of add block control -->
   </div>
   <div class="grid-container">
@@ -90,7 +95,7 @@
         <div class="inner"></div>
       </li>
 
-      <li class="block" each={items} id={id} data-w="{position.w}" data-h="{position.h}" data-x="{position.x}" data-y="{position.y}">
+      <li class="block" each={items} id="{id}" data-w="{position.w}" data-h="{position.h}" data-x="{position.x}" data-y="{position.y}">
         <div class="inner">
           <!-- block control -->
           <div class="controls">
@@ -108,8 +113,8 @@
           <!-- end of block control -->
           <div contenteditable="true" class="block_header">{header}</div>
           <p contenteditable="true" if={type==2}>{"add content" || content_html}</p>
-          <raw content="{ content_html }" data-raw="{ content_raw}"/>
-          <a id="edit" onclick={parent.edit}>edit</a>
+          <raw content="{ data_process.content_html || content_html}" data-raw="{ content_raw}"/>
+
         </div>
       </li>
 
@@ -129,7 +134,7 @@
     };
 
     edit(e){
-      $('li#'+e.item.id+" .controls").show();
+      $(".controls").show();
     };
 
     close_edit(e){
