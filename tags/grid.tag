@@ -62,6 +62,7 @@
       <option value="1">1</option>
       <option value="2">2</option>
       <option value="3" selected>3</option>
+      <option value="4">4</option>
     </select>
     <label for="new_block_h">height</label>
     <select name="new_block_h">
@@ -89,7 +90,7 @@
         <div class="inner"></div>
       </li>
 
-      <li class="block" each={ item, i in items } id={i} data-w="{item.position.w}" data-h="{item.position.h}" data-x="{item.position.x}" data-y="{item.position.y}" >
+      <li class="block" each={items} id={id} data-w="{position.w}" data-h="{position.h}" data-x="{position.x}" data-y="{position.y}">
         <div class="inner">
           <!-- block control -->
           <div class="controls">
@@ -102,11 +103,12 @@
             <a id="close_edit" onclick={parent.close_edit}>close</a>
             <a id="refresh" onclick={parent.refresh}>refresh</a>
             <a id="code" onclick={parent.code}>code</a>
+            <a id="delete" onclick={parent.remove}>Delete</a>
           </div>
           <!-- end of block control -->
-          <div contenteditable="true" class="block_header">{item.header}</div>
-          <p contenteditable="true" if={item.type==2}>{"add content" || item.content_html}</p>
-          <raw content="{ item.content_html }" data-raw="{ item.content_raw}"/>
+          <div contenteditable="true" class="block_header">{header}</div>
+          <p contenteditable="true" if={type==2}>{"add content" || content_html}</p>
+          <raw content="{ content_html }" data-raw="{ content_raw}"/>
           <a id="edit" onclick={parent.edit}>edit</a>
         </div>
       </li>
@@ -120,31 +122,33 @@
     self.currentSize=opts.size;
 
     resize(e){
-      self.items[e.item.i].w=$(e.currentTarget).data('size');
+      self.items[e.item.id].w=$(e.currentTarget).data('size');
+      console.log('resizing...')
+      console.log(self.items[e.item.id].w)
       self.update()
     };
 
     edit(e){
-      $('li#'+e.item.i+" .controls").show();
+      $('li#'+e.item.id+" .controls").show();
     };
 
     close_edit(e){
-      $('li#'+e.item.i+" .controls").hide();
+      $('li#'+e.item.id+" .controls").hide();
     };
+
     save_dashboard(e){
       rc.trigger('dashboard:save');
-    }
-    refresh(e){
+    };
 
-      var block = window.localStorage.getItem("block_"+e.item.i);
+    refresh(e){
+      var block = window.localStorage.getItem("block_"+e.item.id);
       rc.trigger("api:"+block.api,{});
-      var block_data = JSON.parse(window.localStorage.getItem("block_data_"+e.item.i));
-      console.log(e.item);
-      $('li#'+e.item.i+" raw")[0].innerHTML = eval($('li#'+e.item.i+" raw").attr('data-raw'));
+      var block_data = JSON.parse(window.localStorage.getItem("block_data_"+e.item.id));
+      $('li#'+e.item.id+" raw")[0].innerHTML = eval($('li#'+e.item.id+" raw").attr('data-raw'));
     };
 
     code(e){
-      rc.trigger("editor:show",{item:e.item.item});
+      rc.trigger("editor:show",{item:e.item});
     };
 
     add(e) {
@@ -169,19 +173,25 @@
         data_process:{}
       };
       rc.trigger('block:add',itemData);
-      //this.grid.items.push(itemData);
-      //this.grid.num_items=this.grid.num_items+1;
       $('.grid-container').scrollLeft($('.grid-container').width());
+    }
+
+    remove(e){
+      // remove from collection
+      rc.trigger('block:delete',e.item);
+      this.update();
     }
 
     this.on('mount',function(){
       console.log('Grid mounting');
-      this.update();
+      //this.update();
     });
 
     this.on('update',function(data){
+      console.log('updating')
+      console.log(data)
       $('#items').gridList({
-        rows: this.currentSize,
+        rows: this.currentSize || 6,
         widthHeightRatio: 264 / 294,
         heightToFontSizeRatio: 0.2,
         onChange: function(changedItems) {
@@ -205,21 +215,16 @@
     });
 
     rc.on('block:change',function(items){
-      items.forEach(function(item,i){
-        if(self.items[item.id]){
-          self.items[item.id]=item;
-        }else{
-          self.items.push(item);
-        }
-      });
+      self.items = items;
       console.log("block:change");
       console.log(items);
+      console.log(self.items);
       self.update();
       self.update();
     });
 
     rc.on('block:render',function(block_id){
-      self.update();
+      //self.update();
     });
   </script>
 </grid>
@@ -228,6 +233,3 @@
   <span></span>
   this.root.innerHTML = opts.content
 </raw>
-
-<list>
-</list>

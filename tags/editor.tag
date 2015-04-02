@@ -49,8 +49,11 @@
         width: 100%;
         height: 100%;
       }
-      #code_btn{
+      #code_btn, #run_btn{
         top:-1.7em;
+      }
+      #run_btn{
+        left:18em;
       }
       #api_btn{
         top:-1.7em;
@@ -72,12 +75,14 @@
 
   <div id="editor_panel" show={show_editor} hide={!show_editor}>
     <a id="code_btn" onclick={show_code}>Data Processing</a>
+    <a id="run_btn" onclick={run_processing}>run</a>
     <a id="api_btn" onclick={show_api}>API</a>
-    <div name="processing" id="editor" show={(tab==1)}></div>
+    <div name="processing" id="editor" show={(tab==1)} onkeyup={update_changes}></div>
     <div id="apipanel" show={(tab==2)}>
-      <api params={ data.data_process } show={(type==0 || type==99)} ></api>
+      <api name="api" params={ data.data_process } show={(type==0 || type==99)} ></api>
       <qbcontrol params={ data.data_process } show={(type==1 || type==99)} ></qbcontrol>
     </div>
+    <div name="preview" show={(tab==3)}></div>
     <a id="drag">drag</a>
     <a id="close_btn" onclick={close}>x</a>
     <a id="save_btn" onclick={save}>save</a>
@@ -95,6 +100,7 @@
   $('#editor_panel').drags({handle:"#drag"});
   self.data={};
   self.type = 99;
+  self.content_html = ""
   close(e){
     self.show_editor=false;
   }
@@ -105,19 +111,42 @@
     self.tab=2;
   }
 
-  self.on('update, mount',function(){
-    console.log('editor mounting');
-  });
+  update_changes(e){
+    if(self.data.data_process) self.data.data_process.success = self.editor_processing.getValue();
+  }
 
   save(e){
     rc.trigger("editor:save",{data:self.data, code:self.editor_processing.getValue()});
     console.log(this.data);
   }
 
+  run_processing(e){
+    console.log(self.data.data_process)
+    self.tab=3;
+    rc.trigger("api:general",{
+      method: self.data.data_process.method,
+      query:  self.data.data_process.query,
+      before_send:  self.data.data_process.before_send,
+      domain:       self.data.data_process.domain,
+      success: self.data.data_process.success,
+      next: function(table,id){
+        $(self.preview)[0].innerHTML=create_table(table);
+        self.update();
+        console.log($(self.preview)[0].innerHTML);
+      }
+    });
+
+  }
+
+  self.on('update, mount',function(){
+    console.log('editor mounting');
+  });
+
   rc.on("editor:show",function(params){
-    console.log(params.item);
+    console.log("params.item");
     self.data = params.item;
     self.type = params.item.type;
+    console.log(params.item.data_process);
     if(self.editor_processing) self.editor_processing.setValue(params.item.data_process.success);
     self.show_editor=true;
     self.update();
@@ -176,6 +205,11 @@
     #method{
       width:9% !important;
     }
+    #api_result1{
+      width:90%;
+      min-height:18em;
+      height:58em;
+    }
   </style>
 
   <form onload={update_url} >
@@ -217,7 +251,7 @@
 
   update_url(e){
     this.data.domain = this.domain.value || "";
-    this.data.method = this.domain.method || "";
+    this.data.method = this.method.value || "";
     this.data.query = this.editor_data.getValue() || "";
     this.data.before_send = this.editor_beforesend.getValue() || "";
     for( key in original){
@@ -256,6 +290,7 @@
     console.log(self.data);
     console.log(self.saved);
     if(self.editor_beforesend && self.data)self.editor_beforesend.setValue(self.data.before_send || "var beforesend = function(xhr){\n};");
+    if(self.data && self.data.query)self.editor_data.setValue(self.data.query || "");
     original =  self.saved? jQuery.extend({}, opts.params):original;
     self.data=opts.params;
   });
@@ -264,7 +299,7 @@
     self.saved = true;
     original =  self.saved? jQuery.extend({}, self.data):original;
   });
-  rc.on("editor:show",function(params){    
+  rc.on("editor:show",function(params){
   });
   </script>
 </api>
@@ -403,3 +438,8 @@
   })
   </script>
 </qbcontrol>
+
+<raw>
+  <span></span>
+  this.root.innerHTML = opts.content
+</raw>
