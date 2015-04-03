@@ -80,23 +80,29 @@
         position: relative !important;
         display: inline-block;
       }
+      .editor_wrap .editor-toolbar a{
+        position:relative !important;
+      }
   </style>
 
   <div id="editor_panel" show={show_editor} hide={!show_editor}>
     <a id="code_btn" onclick={show_code}>Data Processing</a>
     <a id="run_btn" show={(type!=3 || type==99)} onclick={run_processing}>run</a>
-    <a id="api_btn" onclick={show_api}>Request</a>
-    <div name="processing" id="editor" show={(tab==1)} onkeyup={update_changes}></div>
+    <a id="api_btn" onclick={show_api} hide={(type ==2)}>Data Source</a>
+    <div class="editor_wrap">
+      <div name="processing" id="editor" show={(tab==1 && type!=5)} onkeyup={update_changes}></div>
+      <textarea id="markdown" show={(tab==1 && type==5)}></textarea>
+    </div>
     <div id="apipanel" show={(tab==2)}>
       <api name="api" params={ data.data_process } show={(type==0 || type==99)} ></api>
       <qbcontrol params={ data.data_process } show={(type==1 || type==99)} ></qbcontrol>
       <imagecontrol params={ data.data_process } show={(type==3 || type==99)}><imagecontrol>
     </div>
-    <div name="preview" show={(tab==3)}></div>
+    <div name="preview" id="{'preview'+String(data.id)}" show={(tab==3)}></div>
     <a id="drag">drag</a>
     <a id="close_btn" onclick={close}>x</a>
     <a id="save_btn" onclick={save}>save</a>
-    <a id="apply_btn" onclick={ type==3 ? apply_static : apply_dynamic }>apply</a>
+    <a id="apply_btn" onclick={apply_result}>apply</a>
   </div>
 
   <script>
@@ -109,9 +115,12 @@
   self.editor_processing.getSession().setMode("ace/mode/javascript");
   self.editor_processing.container.style.fontFamily = "monospace"
   $('#editor_panel').drags({handle:"#drag"});
+
+
+  self.editor_markdown;
   self.data={};
   self.type = 99;
-  self.content_html = ""
+  self.content_html = "";
   close(e){
     self.show_editor=false;
   }
@@ -127,53 +136,62 @@
   }
 
   save(e){
-    rc.trigger("editor:save",{data:self.data, code:self.editor_processing.getValue()});
+    var code;
+    if(self.type==5){
+//      code = self.editor_markdown.codemirror.getValue();
+      self.data.data_process.markdown = code;
+    }else{
+      code = self.editor_processing.getValue();
+    }
+    rc.trigger("editor:save",{data:self.data, code:code});
     console.log(this.data);
   }
-  apply_static(e){
-    console.log("apply static...");
-    console.log(self.data.data_process.content_html);
-    //console.log($('li#'+self.data.id+" raw")[0].innerHTML)
-    var html = "<div style='height: 90%; background-image: url("+self.data.data_process.image_src+"); background-size: cover; background-position: 50% 50%; background-repeat: no-repeat;'></div>"
-    self.data.data_process.content_html = html;
-    self.data.content_html = html;
-    $('li#'+self.data.id+" raw")[0].innerHTML=html;
-    self.update();
-  }
-  apply_dynamic(e){
-    rc.trigger("api:general",{
-      method: self.data.data_process.method,
-      query:  self.data.data_process.query,
-      before_send:  self.data.data_process.before_send,
-      domain:       self.data.data_process.domain,
-      success: self.data.data_process.success,
-      next: function(table){
-        $('li#'+self.data.id+" raw")[0].innerHTML=create_table(table);
-        self.data.data_process.content_html = create_table(table);
+
+  apply_result(e){
+    if(self.type==3){
+      console.log("apply image...");
+      var html = "<div style='height: 90%; background-image: url("+self.data.data_process.image_src+"); background-size: cover; background-position: 50% 50%; background-repeat: no-repeat;'></div>"
+      self.data.data_process.content_html = html;
+      self.data.content_html = html;
+      $('li#'+self.data.id+" raw")[0].innerHTML=html;
+      self.update();
+    }else if(self.type == 2){
+      eval(self.data.data_process.success);
+      document.getElementById('content'+String(self.data.id)).appendChild(success());
+    }else{
+      general_api(function(html){
+        $('li#'+self.data.id+" raw")[0].innerHTML=html;
+        self.data.data_process.content_html = html;
         self.update();
         console.log($(self.preview)[0].innerHTML);
-      }
-    });
+      });
+    }
   }
   run_processing(e){
     console.log('run processing...')
-    console.log(self.data.data_process)
     self.tab=3;
+    if(self.type == 2){
+      var success;
+      eval(self.data.data_process.success);
+      document.getElementById('preview'+String(self.data.id)).appendChild(success());
+    }else{
+      general_api(function(table,id){
+          $(self.preview)[0].innerHTML=table;
+          self.update();
+          console.log($(self.preview)[0].innerHTML);
+        });
+    }
+  }
+  function general_api(next){
     rc.trigger("api:general",{
       method: self.data.data_process.method,
       query:  self.data.data_process.query,
       before_send:  self.data.data_process.before_send,
       domain:       self.data.data_process.domain,
       success: self.data.data_process.success,
-      next: function(table,id){
-        $(self.preview)[0].innerHTML=create_table(table);
-        self.update();
-        console.log($(self.preview)[0].innerHTML);
-      }
+      next: next
     });
-
   }
-
   self.on('mount',function(){
     console.log('editor mounting');
     $('#editor_panel').drags({handle:"#drag"});
@@ -186,6 +204,15 @@
     console.log(params.item.data_process);
     if(self.editor_processing) self.editor_processing.setValue(params.item.data_process.success);
     self.show_editor=true;
+    if(self.type==5){
+      /*
+      self.editor_markdown=new Editor({
+        element: document.getElementById('markdown')
+      });
+      self.editor_markdown.codemirror.setValue(self.data.data_process.markdown);
+      self.editor_markdown.render();
+      */
+    }
     self.update();
   });
   </script>
@@ -314,7 +341,7 @@
       result_only:function(data){
         console.log('success on result_only callback');
         console.log(JSON.stringify(data));
-        self.editor_result.setValue(data);
+        self.editor_result.setValue(JSON.stringify(data));
       }
     });
   }

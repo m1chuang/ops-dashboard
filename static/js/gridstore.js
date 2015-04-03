@@ -13,13 +13,24 @@ function gridStore() {
   // This store can easily be swapped for another, while the view components remain untouched.
   self.on('block:build', function(item) {
     console.log("Block:add");
+    console.log(item)
     self.blocks.push(item);
-
+    rc.trigger('block:change', self.blocks.toArray());
     var success = function() {};
+    if (item.type == 2) {
+      eval(item.data_process.success);
+      //$(self.preview)[0].innerHTML=success();
+      console.log('building')
+      console.log(item)
+      document.getElementById('content' + String(item.id)).appendChild(
+        success());
+    }
+
     eval(item.data_process.success); //var success = func
     if (Object.keys(item.data_process).length == 0) {
-      rc.trigger("block:change", self.blocks.toArray());
+      //rc.trigger("block:change", self.blocks.toArray());
     } else {
+      /*
       rc.trigger("api:qb:query:incidents", {
         field_raw: item.field_raw,
         extra: item.extra,
@@ -36,6 +47,7 @@ function gridStore() {
           item.block_data = incident_table;
         }
       });
+			*/
     }
   });
 
@@ -47,28 +59,32 @@ function gridStore() {
 
   self.on('block:delete', function(item) {
     console.log('block:delete');
-
-    console.log(self.blocks);
+    console.log(item);
     self.blocks = self.blocks.reject(function(block) {
-      console.log('rejecting')
-      console.log(block.id);
-      console.log(item.id);
-      console.log(block.id == item.id);
       return block.id == item.id
     });
-    console.log(self.blocks);
+    console.log(self.blocks)
     rc.trigger('block:change', self.blocks.toArray());
   })
-
-
 
   self.on('block:position:update', function(items) {
     console.log("block:positoin:update");
     items.forEach(function(item, i) {
+      console.log(item);
+      console.log(self.blocks);
       self.blocks.select({
-        id: parseInt(item.id, 10)
+        id: item.id
       })[0].position = item.position;
     });
+  });
+
+  self.on('block:size:change', function(item) {
+    console.log('block:size:chang');
+    console.log(item);
+    self.blocks.select({
+      id: item.id
+    })[0].position = item.position;
+    rc.trigger('block:change', self.blocks.toArray());
   });
 
   self.on('editor:save', function(params) {
@@ -80,15 +96,12 @@ function gridStore() {
   self.on('block:all', function() {
     console.log(self.blocks);
     //console.log(JSON.stringify(self.blocks.toJSON()));
-
     rc.trigger('block:change', self.blocks.toArray());
   });
 
   self.on('dashboard:save', function() {
-    //console.log(self.blocks);
     console.log(JSON.stringify(self.blocks.toJSON()));
     console.log(self.blocks.toArray());
-    //rc.trigger('block:change', self.blocks.toArray());
     $.ajax({
       url: 'https://api.github.com/gists/80cffc4fb8dfab253d6b',
       type: 'PATCH',
