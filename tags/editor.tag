@@ -62,7 +62,7 @@
         top:-1.7em;
       }
       #run_btn{
-        left:20em;
+        left: 22em;
       }
       #api_btn{
         top:-1.7em;
@@ -421,6 +421,19 @@
       padding:5px;
       font-size: 2em;
     }
+    #auth_ticket a{
+      width: 9%;
+      margin-right: 1%;
+      position: relative !important;
+      display: inline-block;
+      line-height: 14px;
+
+    }
+    #auth_ticket textarea{
+      width: 84%;
+      position: relative;
+      display: inline-block;
+    }
   </style>
   <form>
     <label><b>Domain</b>
@@ -436,8 +449,11 @@
     <label><b>App token</b>
       <textarea name="app_token" onkeyup={update_url} >{data.app_token}</textarea>
     </label>
-    <label><b>Auth ticket</b>
+    <label id="auth_ticket"><b>Auth ticket</b>
+    <div>
+      <a onclick={renew}>renew</a>
       <textarea name="auth_ticket" onkeyup={update_url} >{data.auth_ticket}</textarea>
+    </div>
     </label>
     <label><b>Query</b>
       <textarea name="query" onkeyup={update_url} >{data.query}</textarea>
@@ -458,7 +474,14 @@
   var saved = true;
 
   //this.url = this.data.domain +'/'+ this.data.app_id || ''; //+ "?a="+this.data.api_type+"&apptoken="+this.data.app_token+'&ticket='+this.data.auth_ticket+"&"+ this.data.query;
-
+  renew(e){
+    console.log("renew clicked")
+    rc.trigger("api:quickbase:renew_auth_ticket",function(ticket){
+      self.data.auth_ticket = ticket;
+      console.log(ticket);
+      self.update();
+    });
+  }
   update_url(e){
     this.data.api_type = this.api_type.value;
     this.data.db_id = this.db_id.value;
@@ -483,7 +506,7 @@
       data: this.data,
       result_only:function(data){
         console.log('success on result_only callback');
-        $('#api_result')[0].innerHTML = $(data).find('records')[0].innerHTML;
+        $('#api_result')[0].innerHTML = $(data).find('records')[0]? $(data).find('records')[0].innerHTML:$(data).find('errdetail')[0].innerHTML;
         $( "f" ).has( "f" ).addClass( "expandable" );
       }
     });

@@ -46,7 +46,7 @@
       font-size: 1.8em !important;
   color: white;
   text-align: left;
-  background: rgb(236, 170, 83);
+  background: rgb(226, 169, 122);
 }
   #save_dashboard{
     background: white;
