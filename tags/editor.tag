@@ -11,10 +11,7 @@
         height:100%;
         width: 100%;
       }
-      raw{
-        width: 100%;
-        height: 90%;
-        }
+
       #editor_panel{
 
         top: 0;
@@ -86,17 +83,17 @@
   </style>
 
   <div id="editor_panel" show={show_editor} hide={!show_editor}>
-    <a id="code_btn" onclick={show_code}>Data Processing</a>
-    <a id="run_btn" show={(type!=3 || type==99)} onclick={run_processing}>run</a>
+    <a id="code_btn" show={ (type!=5 || type==99) } onclick={show_code} >Data Processing</a>
+    <a id="run_btn" show={ (type!=5 || type!=3 || type==99) } onclick={run_processing}>run</a>
     <a id="api_btn" onclick={show_api} hide={(type ==2)}>Data Source</a>
     <div class="editor_wrap">
       <div name="processing" id="editor" show={(tab==1 && type!=5)} onkeyup={update_changes}></div>
-      <textarea id="markdown" show={(tab==1 && type==5)}></textarea>
     </div>
     <div id="apipanel" show={(tab==2)}>
       <api name="api" params={ data.data_process } show={(type==0 || type==99)} ></api>
       <qbcontrol params={ data.data_process } show={(type==1 || type==99)} ></qbcontrol>
-      <imagecontrol params={ data.data_process } show={(type==3 || type==99)}><imagecontrol>
+      <imagecontrol params={ data.data_process } show={(type==3 || type==99)}></imagecontrol>
+      <listcontrol params={ data.data_process } show={(type==5 || type==99)}></listcontrol>
     </div>
     <div name="preview" id="{'preview'+String(data.id)}" show={(tab==3)}></div>
     <a id="drag">drag</a>
@@ -121,6 +118,7 @@
   self.data={};
   self.type = 99;
   self.content_html = "";
+
   close(e){
     self.show_editor=false;
   }
@@ -137,9 +135,7 @@
 
   save(e){
     var code;
-    if(self.type==5){
-//      code = self.editor_markdown.codemirror.getValue();
-      self.data.data_process.markdown = code;
+    if(self.type==5){    
     }else{
       code = self.editor_processing.getValue();
     }
@@ -181,7 +177,7 @@
           console.log($(self.preview)[0].innerHTML);
         });
     }
-  }
+  };
   function general_api(next){
     rc.trigger("api:general",{
       method: self.data.data_process.method,
@@ -191,27 +187,19 @@
       success: self.data.data_process.success,
       next: next
     });
-  }
+  };
+
   self.on('mount',function(){
-    console.log('editor mounting');
     $('#editor_panel').drags({handle:"#drag"});
   });
 
   rc.on("editor:show",function(params){
-    console.log("params.item");
     self.data = params.item;
     self.type = params.item.type;
-    console.log(params.item.data_process);
     if(self.editor_processing) self.editor_processing.setValue(params.item.data_process.success);
     self.show_editor=true;
     if(self.type==5){
-      /*
-      self.editor_markdown=new Editor({
-        element: document.getElementById('markdown')
-      });
-      self.editor_markdown.codemirror.setValue(self.data.data_process.markdown);
-      self.editor_markdown.render();
-      */
+      self.tab=2;
     }
     self.update();
   });
@@ -226,6 +214,7 @@
 
 
 
+<!-- GENERIC API BLOCK -->
 
 <api>
   <style>
@@ -386,7 +375,7 @@
 
 
 
-
+<!-- QUICK BASE BLOCK -->
 
 <qbcontrol>
   <style>
@@ -530,7 +519,7 @@
 
 
 
-
+<!-- IMAGE BLOCK -->
 
 <imagecontrol>
   <style>
@@ -586,6 +575,107 @@
   })
   </script>
 </imagecontrol>
+
+
+<!-- LIST BLOCK -->
+
+<listcontrol>
+  <style>
+  #add{
+    position:relative;
+    position: relative;
+    top: 0.5em;
+    left: 0.5em;
+  }
+  #list{
+    position: relative;
+    top: 5em;
+    left: 1em;
+    width: 100%;
+  }
+  .item{
+    margin-top: 0.5em;
+    line-height: 1.5em;
+  }
+  listcontrol .item:hover{
+    background:wheat;
+  }
+  listcontrol .item:hover button{
+    display:block;
+  }
+  .item button{
+    display:none;
+    position: absolute;
+    height: inherit;
+    width: 2em;
+    font-size: 1.5em;
+    margin: 0;
+  }
+  .content{
+    width: 70%;
+    height: initial !important;
+    display: inline-block;
+    margin-left: 5em;
+    text-align: left;
+  }
+  #numbering{
+    position: absolute;
+    margin-left: 3.5em;
+  }
+  </style>
+  <a id="add" onclick={add_list_item}>+</a>
+  <div id="list" name="list">
+    <div class="item" each={item, i in data.list}>
+      <button onclick={parent.delete_list_item}>-</button>
+      <span id="numbering">{i+1}. </span>
+      <raw class="content" contentEditable="true" onkeyup={parent.update_content} content="{item.content}"/>
+
+    </div>
+  </div>
+  <p id="unsaved_api" hide={!saved}>unsaved changes: list</p>
+  <script>
+  var self = this;
+  var original =  jQuery.extend({}, opts.params);
+  this.data = opts.params;
+  var saved = true;
+
+  add_list_item(e){
+    console.log("adding list item");
+    self.data.list.push({content:"some content"});
+    self.update();
+  }
+
+  delete_list_item(e){
+   self.data.list.splice(e.item.i, 1);
+  }
+
+  update_content(e){
+    console.log("updating.. list item");
+    self.data.list[e.item.i].content=e.currentTarget.innerHTML;
+    console.log(e.currentTarget.innerHTML);
+    console.log(e.currentTarget.text);
+    console.log(e.currentTarget.innerText);
+  }
+  this.on('mount',function(){
+    original =  jQuery.extend({}, opts.params);
+
+  });
+
+  this.on('update',function(){
+    console.log('update api panel')
+    original =  saved? jQuery.extend({}, opts.params):original;
+    self.data=opts.params;
+    if(self.data) self.data.content_html = this.list.innerHTML;
+    console.log(this.list.innerHTML);
+    console.log(self.data)
+
+  });
+
+  rc.on("editor:show",function(params){
+    console.log('qc params.item');
+  })
+  </script>
+</listcontrol>
 
 
 

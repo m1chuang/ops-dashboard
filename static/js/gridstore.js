@@ -53,6 +53,10 @@ function gridStore() {
 
   self.on('block:add', function(item) {
     console.log('block:add');
+    if (item.type == 5) {
+      console.log(item)
+      item.data_process.list = [];
+    }
     self.blocks.push(item);
     rc.trigger("block:change", self.blocks.toArray());
   })

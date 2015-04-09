@@ -3,8 +3,14 @@
 
   <style>
     #items *{
-      font-size:10px;
+      font-size:14px;
       line-height: 1em;
+    }
+    raw canvas{
+      display:inline-block;
+      width:100% !important;
+      height:100% !important;
+
     }
     raw{
       display:inline-block;
@@ -12,10 +18,12 @@
       font-size:10px;
       line-height: 1em;
       overflow:scroll;
+      width: 100%;
+
     }
     .controls{
-
-      background:rgb(205, 205, 205);
+      display:none;
+      background:rgb(146, 186, 207);
       height:100%;
       width:9em;
     }
@@ -30,23 +38,28 @@
       margin-bottom:5px;
     }
     table {
-      border: 1px solid #666;
+      border: 1px solid grey;
       width: 100%;
+
     }
     th {
       background: #f8f8f8;
       font-weight: bold;
       padding: 2px;
+      height:1.3em;
     }
     #close_edit{
       color:red;
     }
     .block_header {
       padding: 0.1em;
-      font-size: 1.8em !important;
+      font-size: 1.3em !important;
   color: white;
   text-align: left;
   background: rgb(226, 169, 122);
+}
+raw table{
+  height:98%;
 }
   #save_dashboard{
     background: white;
@@ -68,6 +81,15 @@
   width:100%;
   display:inline-block;
 }
+#inner{
+  height:100%;
+}
+.close_edit{
+  color:red;
+}
+
+tr:nth-child(even) {background: #ECECEC}
+tr:nth-child(odd) {background: white}
   </style>
 
   <div class="header">
@@ -95,16 +117,16 @@
       <option value="1" selected>quickBase</option>
       <option value="0">generic API</option>
       <option value="2">freeform</option>
-      <option value="5">markdown</option>
+      <option value="5">list</option>
       <option value="3">image</option>
       <option value="4">pageDuty</option>
       <option value="6">Jira</option>
     </select>
     <button onclick={save_dashboard} >Save edit</button>
-    <button id="edit" onclick={edit} >edit</button>
+    <button id="edit" onclick={edit} class="{(editing)?'close_edit':'edit'}">{editing?"Close Edit":"Edit"}</button>
     <!-- end of add block control -->
   </div>
-  <div class="grid-container">
+  <div class="grid-container" >
     <ul id="items" class="grid">
       <li class="position-highlight">
         <div class="inner"></div>
@@ -135,10 +157,11 @@
             <a class="row" id="delete" onclick={parent.remove}>Delete</a>
           </div>
           <!-- end of block control -->
-          <div name="header" contenteditable="true" class="block_header" onkeyup={parent.update_content}>{header}</div>
-          <p contenteditable="true" if={type==2}>{"add content" || content_html}</p>
-          <raw content="{ data_process.content_html || content_html}" id="{'content'+String(id)}" data-raw="{ content_raw}"/>
+          <div id="inner">
+            <div name="header" contenteditable="true" class="block_header" onkeyup={parent.update_content}>{header}</div>
 
+            <raw content="{ data_process.content_html || content_html}" id="{'content'+String(id)}" data-raw="{ content_raw}"/>
+          </div>
         </div>
       </li>
 
@@ -149,11 +172,13 @@
     var self = this;
     self.items =opts.items || [];
     self.currentSize=opts.size;
+    self.editing = false;
     update_content(e){
       console.log('updating contenteditable...');
       e.item.header = e.currentTarget.innerHTML;
     }
     resize_w(e){
+
       rc.trigger('block:size:change',{id:e.item.id,position:{
         w:$(e.currentTarget).data('size'),
         h:e.item.position.h,
@@ -173,8 +198,11 @@
     };
 
     edit(e){
-      $(".controls").show();
+      self.editing? $('.controls').hide():$('.controls').show();
+      self.editing=!self.editing;
+      self.update();
     };
+
 
     close_edit(e){
       $('li#'+e.item.id+" .controls").hide();
@@ -213,8 +241,9 @@
           y: 0
         },
         type:parseInt(this.block_type.value,10),
-        content_html:"",
-        data_process:{}
+        data_process:{
+          content_html:""
+        }
       };
       rc.trigger('block:add',itemData);
       $('.grid-container').scrollLeft($('.grid-container').width());
@@ -232,7 +261,9 @@
 
     this.on('update',function(data){
       console.log('Grid updating');
-      console.log(data)
+      console.log(data);
+
+      setTimeout(self.calculate_height,200);
       $('#items').gridList({
         rows: this.currentSize || 6,
         widthHeightRatio: 264 / 294,
@@ -255,12 +286,18 @@
       });
 
     });
-
+    calculate_height(e){
+      console.log('cal height')
+      self.items.forEach(function(item,i){
+        $("li#" + item.id +' raw').height(2+$("li#" + item.id +' .inner').height()-$("li#" + item.id +' .block_header').height());
+      });
+    }
     rc.on('block:change',function(items){
+
       self.items = items;
       console.log("block:change");
       self.update();
-      self.update();
+
     });
 
     rc.on('block:render',function(block_id){
