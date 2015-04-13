@@ -2,9 +2,13 @@
 <grid>
 
   <style>
+    body{
+      /*background: rgb(138, 144, 161);*/
+      font-family: 'Signika Negative', sans-serif;
+    }
     #items *{
       font-size:14px;
-      line-height: 1em;
+      line-height: 14px;
     }
     raw canvas{
       display:inline-block;
@@ -12,24 +16,28 @@
       height:100% !important;
 
     }
-    raw{
+    .blockcontent{
       display:inline-block;
       width:100%;
       font-size:10px;
       line-height: 1em;
-      overflow:scroll;
-      width: 100%;
+      max-height: 91%;
+      height: 100%;
+      font-weight: 300;
 
     }
     .controls{
       display:none;
-      background:rgb(146, 186, 207);
+      /*background:rgb(146, 186, 207);*/
       height:100%;
       width:9em;
     }
 
     input, form{
       line-height: 1em;
+    }
+    .grid-container{
+      /*background: rgb(138, 144, 161);*/
     }
     .grid-container label{
       font-size:10px;
@@ -38,9 +46,8 @@
       margin-bottom:5px;
     }
     table {
-      border: 1px solid grey;
       width: 100%;
-
+      height:100%;
     }
     th {
       background: #f8f8f8;
@@ -51,51 +58,75 @@
     #close_edit{
       color:red;
     }
-    .block_header {
-      padding: 0.1em;
+    .block_header raw{
+      padding-left:1em;
+      line-height: 1.3em !important;
       font-size: 1.3em !important;
-  color: white;
-  text-align: left;
-  background: rgb(226, 169, 122);
-}
-raw table{
-  height:98%;
-}
-  #save_dashboard{
-    background: white;
-    border: 1px solid black;
-    cursor: pointer;
-  }
-  button{
-    height: 100%;
-  margin-left: 1em;
-}
-.resize a{
-  cursor:pointer;
-  background:transparent;
-}
-.resize a:hover{
-  color:red;
-}
-.row{
-  width:100%;
-  display:inline-block;
-}
-#inner{
-  height:100%;
-}
-.close_edit{
-  color:red;
-}
+    }
+    .block_header {
+      max-height: 11%;
+      color: white;
+      text-align: left;
+      background: rgb(226, 169, 122);
+      width:100%;      
 
-tr:nth-child(even) {background: #ECECEC}
-tr:nth-child(odd) {background: white}
+      display:inline-block;
+    }
+    #save_dashboard{
+      background: white;
+      border: 1px solid black;
+      cursor: pointer;
+    }
+    button{
+      margin-left: 1em;
+    }
+    .resize a{
+      cursor:pointer;
+      background:transparent;
+    }
+    .resize a:hover{
+      color:red;
+    }
+    .row{˜˜
+      width:100%;
+      display:inline-block;
+    }
+    #inner{
+      height:100%;
+    }
+    .close_edit{
+      color:red;
+    }
+
+    tr:nth-child(even) {background: #ECECEC}
+    tr:nth-child(odd) {background: white}
+
+
+    .item raw.content {
+      padding: 0;
+      padding-left: 9%;
+      width: 91%;
+      display: inline-block;
+      margin: 0;
+    }
+    span#numbering {
+      margin-left: 3%;
+    }
+    #setting{
+      float:right;
+      margin:1em;
+      cursor:pointer;
+      font-size:14px;
+    }
+    #setting:hover{
+      color:red;
+    }
   </style>
-
-  <div class="header">
+  <a id="setting" onclick={edit_setting} show={!show_setting}>setting</a>
+  <div class="header" show={show_setting}>
     <!-- add block control -->
-
-    <button class="button add-item" onclick={ add }>+item</button>
+    <a id="setting" onclick={edit_setting}>close</a>
+    <button class="add-item" onclick={ add }>+item</button>
     <label for="new_block_w">width</label>
     <select name="new_block_w">
       <option value="1">1</option>
@@ -158,9 +189,9 @@ tr:nth-child(odd) {background: white}
           </div>
           <!-- end of block control -->
           <div id="inner">
-            <div name="header" contenteditable="true" class="block_header" onkeyup={parent.update_content}>{header}</div>
+            <div contenteditable="true" class="block_header" onkeyup={parent.update_content} ><raw content={header}/></div>
 
-            <raw content="{ data_process.content_html || content_html}" id="{'content'+String(id)}" data-raw="{ content_raw}"/>
+            <raw class="blockcontent" content="{ data_process.content || data_process.content_html || content_html}" id="{'content'+String(id)}" data-raw="{ content_raw}"/>
           </div>
         </div>
       </li>
@@ -173,10 +204,30 @@ tr:nth-child(odd) {background: white}
     self.items =opts.items || [];
     self.currentSize=opts.size;
     self.editing = false;
+    self.show_setting = false;
+    edit_setting(e){
+      self.show_setting = !self.show_setting;
+    }
     update_content(e){
       console.log('updating contenteditable...');
+      console.log(e.target.innerHTML);
+      console.log(e.currentTarget.innerHTML);
       e.item.header = e.currentTarget.innerHTML;
     }
+    edit(e){
+      console.log("click header")
+        e = e || window.event;
+        console.log(e.target.contentEditable)
+        e.target.contentEditable = true;
+        e.target.focus();
+        var caretRange = getMouseEventCaretRange(e);
+
+        // Set a timer to allow the selection to happen and the dust settle first
+        window.setTimeout(function() {
+            selectRange(caretRange);
+        }, 10);
+        return false;
+    };
     resize_w(e){
 
       rc.trigger('block:size:change',{id:e.item.id,position:{
@@ -268,6 +319,7 @@ tr:nth-child(odd) {background: white}
         rows: this.currentSize || 6,
         widthHeightRatio: 264 / 294,
         heightToFontSizeRatio: 0.2,
+
         onChange: function(changedItems) {
           changedItems.forEach(function(item, i){
             $("li#" + item.$element.context.id).attr('data-x', item.x );
@@ -283,7 +335,7 @@ tr:nth-child(odd) {background: white}
             }]);
           });
         }//eo onChange
-      });
+      },{handle:'.blockcontent'});
 
     });
     calculate_height(e){

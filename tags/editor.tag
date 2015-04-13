@@ -4,6 +4,7 @@
         z-index: 2;
         position: absolute;
         left: 50%;
+        top: 20%;
         transform: translateX(-50%);
       }
       #editor {
@@ -99,7 +100,7 @@
     <a id="drag">drag</a>
     <a id="close_btn" onclick={close}>x</a>
     <a id="save_btn" onclick={save}>save</a>
-    <a id="apply_btn" onclick={apply_result}>apply</a>
+    <a id="apply_btn" onclick={run_processing}>apply</a>
   </div>
 
   <script>
@@ -121,6 +122,7 @@
 
   close(e){
     self.show_editor=false;
+    rc.trigger("editor:clear");
   }
   show_code(e){
     self.tab=1;
@@ -135,7 +137,7 @@
 
   save(e){
     var code;
-    if(self.type==5){    
+    if(self.type==5){
     }else{
       code = self.editor_processing.getValue();
     }
@@ -143,40 +145,50 @@
     console.log(this.data);
   }
 
-  apply_result(e){
-    if(self.type==3){
-      console.log("apply image...");
-      var html = "<div style='height: 90%; background-image: url("+self.data.data_process.image_src+"); background-size: cover; background-position: 50% 50%; background-repeat: no-repeat;'></div>"
-      self.data.data_process.content_html = html;
-      self.data.content_html = html;
-      $('li#'+self.data.id+" raw")[0].innerHTML=html;
-      self.update();
-    }else if(self.type == 2){
-      eval(self.data.data_process.success);
-      document.getElementById('content'+String(self.data.id)).appendChild(success());
-    }else{
-      general_api(function(html){
-        $('li#'+self.data.id+" raw")[0].innerHTML=html;
-        self.data.data_process.content_html = html;
-        self.update();
-        console.log($(self.preview)[0].innerHTML);
-      });
-    }
-  }
   run_processing(e){
-    console.log('run processing...')
+    console.log('run processing...');
+    var apply = (e.target.id == "run_btn")?false:true;
+    var id = ((apply)? 'content':'preview')+self.data.id;
+
     self.tab=3;
-    if(self.type == 2){
-      var success;
-      eval(self.data.data_process.success);
-      document.getElementById('preview'+String(self.data.id)).appendChild(success());
-    }else{
-      general_api(function(table,id){
-          $(self.preview)[0].innerHTML=table;
-          self.update();
-          console.log($(self.preview)[0].innerHTML);
+    switch (self.type){
+      case 3:
+        console.log("apply image...");
+        var html = "<div style='height: 90%; background-image: url("+self.data.data_process.image_src+"); background-size: cover; background-position: 50% 50%; background-repeat: no-repeat;'></div>"
+        self.data.data_process.content_html = html;
+        self.data.content_html = html;
+        document.getElementById(id).innerHTML=html;
+        self.update();
+        break;
+      case 2:
+        var success;
+        eval(self.data.data_process.success);
+        document.getElementById(id).appendChild(success());
+        break;
+      case 1:
+        rc.trigger("api:general",{
+          proxy:true,
+          method: self.data.data_process.method,
+          domain: self.data.data_process.raw_url,
+          success: self.data.data_process.success,
+          next: function(table){
+            document.getElementById(id).innerHTML=create_table(table);
+            self.data.data_process.content = create_table(table);
+            self.update();
+          }
         });
-    }
+        break;
+      case 0:
+        console.log(id)
+        general_api(function(table){
+          console.log(id)
+            document.getElementById(id).innerHTML=table;//create_table(table);
+            self.data.data_process.content_html = table;//create_table(table);
+            self.data.data_process.content = table;
+            self.update();
+          });
+        break;
+    };
   };
   function general_api(next){
     rc.trigger("api:general",{
@@ -194,6 +206,8 @@
   });
 
   rc.on("editor:show",function(params){
+    console.log("editor:show....")
+    console.log(params)
     self.data = params.item;
     self.type = params.item.type;
     if(self.editor_processing) self.editor_processing.setValue(params.item.data_process.success);
@@ -229,9 +243,6 @@
       margin-top:5px;
       margin-bottom:5px;
     }
-    #damain{
-
-    }
     f {
       width: 100%;
       display: inline-block;
@@ -266,31 +277,37 @@
   </style>
 
   <form onload={update_url} >
+
     <label id="method"><b>HTTP method</b>
       <textarea name="method" onkeyup={update_url}>{data.method}</textarea>
     </label>
+
     <label id="domain"><b>Domain</b>
       <textarea name="domain" onkeyup={update_url}>{data.domain}</textarea>
     </label>
+
     <label><b>Payload</b>
       <div name="payload" id="payload" onkeyup={update_url}></div>
     </label>
+
     <label><b>BeforeSend (Headers, MIME, etc)</b>
       <div name="beforesend" id="beforesend" onkeyup={update_url}></div>
     </label>
+
     <label><b>RAW URL</b>
     <p id="raw_url" name="raw_url">{ data.method+":"+ data.domain }</p>
     </label>
+
     <p id="unsaved_api" show={(!saved)} hide={(saved)}>unsaved changes: API {saved}</p>
     <a id="run" onclick={run}>Test</a>
-  </api>
+  </form>
 
   <div name="api_result1" id="api_result1"></div>
+
   <script>
   var self = this;
   var original =  jQuery.extend({}, opts.params);
   this.data = opts.params;
-
 
   this.editor_result = ace.edit(this.api_result1);
   this.editor_beforesend = ace.edit(this.beforesend);
@@ -354,23 +371,10 @@
   rc.on("editor:show",function(params){
     if(self.editor_beforesend && self.data)self.editor_beforesend.setValue(self.data.before_send || "var beforesend = function(xhr){\n};");
     if(self.data && self.data.query)self.editor_data.setValue(self.data.query || "");
+    self.update();
   });
   </script>
 </api>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -389,9 +393,6 @@
     label{
       margin-top:5px;
       margin-bottom:5px;
-    }
-    #damain{
-
     }
     f {
       width: 100%;
@@ -424,7 +425,9 @@
       display: inline-block;
     }
   </style>
+
   <form>
+
     <label><b>Domain</b>
       <p id="domain">{data.domain}</p>
     </label>
@@ -432,21 +435,27 @@
     <label><b>Api type</b>
       <textarea name="api_type" onkeyup={update_url} >{data.api_type}</textarea>
     </label>
+
     <label><b>DB id</b>
       <textarea name="db_id" onkeyup={update_url} >{data.db_id}</textarea>
     </label>
+
     <label><b>App token</b>
       <textarea name="app_token" onkeyup={update_url} >{data.app_token}</textarea>
     </label>
+
     <label id="auth_ticket"><b>Auth ticket</b>
+
     <div>
       <a onclick={renew}>renew</a>
       <textarea name="auth_ticket" onkeyup={update_url} >{data.auth_ticket}</textarea>
     </div>
     </label>
+
     <label><b>Query</b>
       <textarea name="query" onkeyup={update_url} >{data.query}</textarea>
     </label>
+
     <label><b>RAW URL</b>
       <p id="raw_url" name="raw_url">{ data.domain + "/db/" + data.db_id + "?a="+data.api_type+"&apptoken="+data.app_token}<br>{'&ticket='+data.auth_ticket+"&"+ data.query}</p>
     </label>
@@ -460,6 +469,7 @@
   var self = this;
   var original =  jQuery.extend({}, opts.params);
   this.data = opts.params;
+
   var saved = true;
 
   //this.url = this.data.domain +'/'+ this.data.app_id || ''; //+ "?a="+this.data.api_type+"&apptoken="+this.data.app_token+'&ticket='+this.data.auth_ticket+"&"+ this.data.query;
@@ -477,6 +487,7 @@
     this.data.app_token = this.app_token.value;
     this.data.auth_ticket = this.auth_ticket.value;
     this.data.query = this.query.value;
+    this.data.raw_url = this.data.domain+"/db/"+this.data.db_id+"?a=API_DoQuery&apptoken="+this.data.app_token+"&ticket="+this.data.auth_ticket+"&query="+this.data.query +"&fmt=structured"
     console.log('original');
     console.log(original);
     console.log(this.data);
@@ -541,8 +552,6 @@
   var original =  jQuery.extend({}, opts.params);
   this.data = opts.params;
   var saved = true;
-
-  //this.url = this.data.domain +'/'+ this.data.app_id || ''; //+ "?a="+this.data.api_type+"&apptoken="+this.data.app_token+'&ticket='+this.data.auth_ticket+"&"+ this.data.query;
 
   update_url(e){
     this.data.image_src = this.image_src.value;
@@ -652,9 +661,6 @@
   update_content(e){
     console.log("updating.. list item");
     self.data.list[e.item.i].content=e.currentTarget.innerHTML;
-    console.log(e.currentTarget.innerHTML);
-    console.log(e.currentTarget.text);
-    console.log(e.currentTarget.innerText);
   }
   this.on('mount',function(){
     original =  jQuery.extend({}, opts.params);
@@ -667,7 +673,6 @@
     self.data=opts.params;
     if(self.data) self.data.content_html = this.list.innerHTML;
     console.log(this.list.innerHTML);
-    console.log(self.data)
 
   });
 
