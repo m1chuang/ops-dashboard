@@ -122,8 +122,9 @@
       display: inline-block;
       margin: 0;
     }
-    span#numbering {
-      margin-left: 3%;
+    li #numbering {
+      position: absolute;
+      margin-left: 1em;
     }
     #setting{
       float:right;
@@ -136,7 +137,7 @@
     }
 
   </style>
-  <a id="setting" onclick={edit_setting} show={!show_setting}><p>setting</p></a>
+  <a id="setting" onclick={edit_setting} show={!show_setting}>setting</a>
   <div class="header" show={show_setting}>
     <!-- add block control -->
     <a id="setting" onclick={edit_setting}>close</a>

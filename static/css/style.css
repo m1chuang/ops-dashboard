@@ -6,10 +6,10 @@
 
 .grid-container {
   position: absolute;
-  top: 10%;
-  left: 1em;
-  right: 10px;
-  bottom: 10%;
+  top: 7%;
+  left: 0.3em;
+
+  bottom: 0.3em;
   overflow-x: auto;
   overflow-y: hidden;
 }
@@ -84,7 +84,7 @@
 
 .header {
   height: 100%;
-  width: 15em;
+  max-width: 7em;
   position: fixed;
   border-bottom: 1px solid #ccc;
   right: 0;
@@ -96,9 +96,12 @@ z-index:999999999;
     width:70%;
     height: 40px;
     color: #000;
+    padding-left: 15%;
+    padding-right: 15%;
     text-align: center;
     text-decoration: none;
     cursor: pointer;
+    margin-left: 1em;
   }
   .header p {
     padding: 0 10px;

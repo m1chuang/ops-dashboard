@@ -3,6 +3,8 @@
       editor{
         z-index: 2;
         position: absolute;
+        max-width:85%;
+        width: 85%;
         left: 50%;
         top: 20%;
         transform: translateX(-50%);
@@ -24,9 +26,8 @@
         border:1px solid black;
         top:20%;
         height:60%;
-        width:60%;
         font-family:monospace !important;
-        width: 83em;
+
         height: 44em;
       }
       #editor_panel a{
@@ -36,38 +37,38 @@
         cursor: pointer;
         color: red;
         padding:5px;
-        font-size: 2em;
+        /*font-size: 2em;*/
       }
       #close_btn, #save_btn, #apply_btn{
-        right: -1.3em;
+        right: -1.8em;
         top:0;
       }
 
       #save_btn{
         top:2em;
-        right: -3.2em;
+        right: -3.6em;
       }
 
       #apply_btn{
         top:5em;
-        right: -3.9em;
+        right: -4.2em;
       }
       div#apipanel {
         width: 100%;
         height: 100%;
       }
       #code_btn, #run_btn{
-        top:-1.7em;
+        top:-2em;
       }
       #run_btn{
         left: 22em;
       }
       #api_btn{
-        top:-1.7em;
+        top:-2em;
         left:14em;
       }
       #drag{
-        top:-1.7em;
+        top:-2em;
         right:0;
       }
       div#apipanel label {
@@ -166,6 +167,7 @@
         document.getElementById(id).appendChild(success());
         break;
       case 1:
+        console.log(self.data.data_process.raw_url)
         rc.trigger("api:general",{
           proxy:true,
           method: self.data.data_process.method,
@@ -234,7 +236,7 @@
   <style>
     form{
       padding:10px;
-      font-size:1.2em;
+
     }
     textarea{
       width:100%;
@@ -258,7 +260,7 @@
       cursor: pointer;
       color: red;
       padding:5px;
-      font-size: 2em;
+
     }
     #beforesend, #payload{
       height:5em;
@@ -385,7 +387,7 @@
   <style>
     form{
       padding:10px;
-      font-size:1.2em;
+      /*font-size:1.2em;*/
     }
     textarea{
       width:100%;
@@ -409,7 +411,7 @@
       cursor: pointer;
       color: red;
       padding:5px;
-      font-size: 2em;
+      /*font-size: 2em;*/
     }
     #auth_ticket a{
       width: 9%;
@@ -424,6 +426,7 @@
       position: relative;
       display: inline-block;
     }
+    #renew{font-size:1em;}
   </style>
 
   <form>
@@ -447,7 +450,7 @@
     <label id="auth_ticket"><b>Auth ticket</b>
 
     <div>
-      <a onclick={renew}>renew</a>
+      <a id="renew" onclick={renew}>renew</a>
       <textarea name="auth_ticket" onkeyup={update_url} >{data.auth_ticket}</textarea>
     </div>
     </label>
@@ -473,14 +476,7 @@
   var saved = true;
 
   //this.url = this.data.domain +'/'+ this.data.app_id || ''; //+ "?a="+this.data.api_type+"&apptoken="+this.data.app_token+'&ticket='+this.data.auth_ticket+"&"+ this.data.query;
-  renew(e){
-    console.log("renew clicked")
-    rc.trigger("api:quickbase:renew_auth_ticket",function(ticket){
-      self.data.auth_ticket = ticket;
-      console.log(ticket);
-      self.update();
-    });
-  }
+
   update_url(e){
     this.data.api_type = this.api_type.value;
     this.data.db_id = this.db_id.value;
@@ -488,6 +484,7 @@
     this.data.auth_ticket = this.auth_ticket.value;
     this.data.query = this.query.value;
     this.data.raw_url = this.data.domain+"/db/"+this.data.db_id+"?a=API_DoQuery&apptoken="+this.data.app_token+"&ticket="+this.data.auth_ticket+"&query="+this.data.query +"&fmt=structured"
+    console.log(this.data.auth_ticket);
     console.log('original');
     console.log(original);
     console.log(this.data);
@@ -500,7 +497,16 @@
     }
     this.update();
   }
-
+  renew(e){
+    console.log("renew clicked")
+    rc.trigger("api:quickbase:renew_auth_ticket",function(ticket){
+      self.data.auth_ticket = ticket;
+      self.auth_ticket.value = ticket;
+      console.log(ticket);
+      self.update_url();
+      self.update();
+    });
+  }
   run(e){
     rc.trigger("api:qb",{
       data: this.data,
@@ -598,7 +604,6 @@
   }
   #list{
     position: relative;
-    top: 5em;
     left: 1em;
     width: 100%;
   }
@@ -617,7 +622,7 @@
     position: absolute;
     height: inherit;
     width: 2em;
-    font-size: 1.5em;
+    /*font-size: 1.5em;*/
     margin: 0;
   }
   .content{
@@ -627,18 +632,19 @@
     margin-left: 5em;
     text-align: left;
   }
-  #numbering{
+  listcontrol #numbering{
     position: absolute;
-    margin-left: 3.5em;
+    margin-left: 2.5em;
   }
   </style>
   <a id="add" onclick={add_list_item}>+</a>
   <div id="list" name="list">
     <div class="item" each={item, i in data.list}>
       <button onclick={parent.delete_list_item}>-</button>
-      <span id="numbering">{i+1}. </span>
-      <raw class="content" contentEditable="true" onkeyup={parent.update_content} content="{item.content}"/>
-
+      <p>
+        <span id="numbering">{i+1}. </span>
+        <raw class="content" contentEditable="true" onkeyup={parent.update_content} content="{item.content}"/>
+      </P>
     </div>
   </div>
   <p id="unsaved_api" hide={!saved}>unsaved changes: list</p>
