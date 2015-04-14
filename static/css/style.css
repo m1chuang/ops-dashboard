@@ -6,10 +6,10 @@
 
 .grid-container {
   position: absolute;
-  top: 4em;
+  top: 10%;
   left: 1em;
   right: 10px;
-  bottom: 1em;
+  bottom: 10%;
   overflow-x: auto;
   overflow-y: hidden;
 }
@@ -23,8 +23,8 @@
   .grid li {
     position: absolute;
     z-index: 1;
-    font-weight: bold;
-    line-height: 4em;
+
+
     text-align: center;
     cursor: pointer;
     -webkit-transition: top 0.2s,
@@ -36,6 +36,7 @@
   }
   .grid li .inner {
     position: absolute;
+    overflow:hidden;
     background: #fff;
     border: 2px solid #E2A97A;
     top: 0;
@@ -63,9 +64,6 @@
     top: 0;
     right: 0;
     float: right;
-    font-size: 0.4em;
-    font-weight: normal;
-    line-height: 1em;
     opacity: 0;
     -webkit-transition: opacity 0.2s;
   }
@@ -96,23 +94,16 @@ z-index:999999999;
 }
   .header button,.header select,.header label {
     width:70%;
-
     height: 40px;
-
-
-
     color: #000;
-    font-size: 18px;
-    line-height: 40px;
-    font-weight: 700;
     text-align: center;
     text-decoration: none;
     cursor: pointer;
   }
   .header p {
     padding: 0 10px;
-    font-size: 18px;
-    line-height: 55px;
+    /*font-size: 18px;
+    line-height: 55px;*/
     text-align: right;
     text-transform: uppercase;
   }

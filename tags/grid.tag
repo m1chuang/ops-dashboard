@@ -7,8 +7,8 @@
       font-family: 'Signika Negative', sans-serif;
     }
     #items *{
-      font-size:14px;
-      line-height: 14px;
+      /*font-size:14px;
+      line-height: 14px;*/
     }
     raw canvas{
       display:inline-block;
@@ -19,8 +19,8 @@
     .blockcontent{
       display:inline-block;
       width:100%;
-      font-size:10px;
-      line-height: 1em;
+      /*font-size:10px;
+      line-height: 1em;*/
       max-height: 91%;
       height: 100%;
       font-weight: 300;
@@ -28,7 +28,7 @@
     }
     .controls{
       display:none;
-      /*background:rgb(146, 186, 207);*/
+      background:rgb(146, 186, 207);
       height:100%;
       width:9em;
     }
@@ -48,6 +48,19 @@
     table {
       width: 100%;
       height:100%;
+      /*display: inline-block;
+      position:relative;*/
+
+      border-collapse: collapse;
+ }
+    tbody {
+      width: 100%;
+      height:100%;
+      /*display: inline-block;
+      position:relative;*/
+    }
+    tr{
+
     }
     th {
       background: #f8f8f8;
@@ -60,15 +73,15 @@
     }
     .block_header raw{
       padding-left:1em;
-      line-height: 1.3em !important;
-      font-size: 1.3em !important;
+
+
     }
     .block_header {
       max-height: 11%;
       color: white;
       text-align: left;
       background: rgb(226, 169, 122);
-      width:100%;      
+      width:100%;
 
       display:inline-block;
     }
@@ -116,13 +129,14 @@
       float:right;
       margin:1em;
       cursor:pointer;
-      font-size:14px;
+
     }
     #setting:hover{
       color:red;
     }
+
   </style>
-  <a id="setting" onclick={edit_setting} show={!show_setting}>setting</a>
+  <a id="setting" onclick={edit_setting} show={!show_setting}><p>setting</p></a>
   <div class="header" show={show_setting}>
     <!-- add block control -->
     <a id="setting" onclick={edit_setting}>close</a>
@@ -189,9 +203,9 @@
           </div>
           <!-- end of block control -->
           <div id="inner">
-            <div contenteditable="true" class="block_header" onkeyup={parent.update_content} ><raw content={header}/></div>
+            <h3 contenteditable="true" class="block_header" onkeyup={parent.update_content} ><raw content={header}/></h3>
 
-            <raw class="blockcontent" content="{ data_process.content || data_process.content_html || content_html}" id="{'content'+String(id)}" data-raw="{ content_raw}"/>
+            <p><raw class="blockcontent" content="{ data_process.content || data_process.content_html || content_html}" id="{'content'+String(id)}" data-raw="{ content_raw}"/></p>
           </div>
         </div>
       </li>
@@ -210,9 +224,12 @@
     }
     update_content(e){
       console.log('updating contenteditable...');
-      console.log(e.target.innerHTML);
-      console.log(e.currentTarget.innerHTML);
-      e.item.header = e.currentTarget.innerHTML;
+      console.log(e.currentTarget.children[0].innerHTML);
+      console.log(e.currentTarget.children[0].children[0]);
+      console.log(e.currentTarget.children[0].children[0].innerHTML);
+
+
+      e.item.header = e.currentTarget.children[0].innerHTML;
     }
     edit(e){
       console.log("click header")
@@ -308,6 +325,13 @@
 
     this.on('mount',function(){
       console.log('Grid mounting');
+      $('body').flowtype({
+
+         minFont   : 4,
+         maxFont   : 30,
+         fontRatio : 30
+      });
+
     });
 
     this.on('update',function(data){
