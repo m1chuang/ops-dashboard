@@ -6,38 +6,23 @@
       /*background: rgb(138, 144, 161);*/
       font-family: 'Signika Negative', sans-serif;
     }
-    #items *{
-      /*font-size:14px;
-      line-height: 14px;*/
-    }
     raw canvas{
       display:inline-block;
       width:100% !important;
       height:100% !important;
-
     }
     .blockcontent{
       display:inline-block;
       width:100%;
-      /*font-size:10px;
-      line-height: 1em;*/
       max-height: 91%;
       height: 100%;
       font-weight: 300;
-
     }
     .controls{
       display:none;
       background:rgb(146, 186, 207);
       height:100%;
       width:9em;
-    }
-
-    input, form{
-      line-height: 1em;
-    }
-    .grid-container{
-      /*background: rgb(138, 144, 161);*/
     }
     .grid-container label{
       font-size:10px;
@@ -48,19 +33,11 @@
     table {
       width: 100%;
       height:100%;
-      /*display: inline-block;
-      position:relative;*/
-
       border-collapse: collapse;
- }
+    }
     tbody {
       width: 100%;
       height:100%;
-      /*display: inline-block;
-      position:relative;*/
-    }
-    tr{
-
     }
     th {
       background: #f8f8f8;
@@ -73,8 +50,6 @@
     }
     .block_header raw{
       padding-left:1em;
-
-
     }
     .block_header {
       max-height: 11%;
@@ -96,6 +71,8 @@
     .resize a{
       cursor:pointer;
       background:transparent;
+      font-size: 1.3em;
+      margin-left: 0.5em;
     }
     .resize a:hover{
       color:red;
@@ -135,6 +112,7 @@
     #setting:hover{
       color:red;
     }
+    a.control:hover{color:blue;}
 
   </style>
   <a id="setting" onclick={edit_setting} show={!show_setting}>setting</a>
@@ -197,10 +175,10 @@
               <a onclick={parent.resize_h} data-size="5">5x</a>
             </label>
 
-            <a class="row" id="close_edit" onclick={parent.close_edit}>close</a>
-            <a class="row" id="refresh" onclick={parent.refresh}>refresh</a>
-            <a class="row" id="code" onclick={parent.code}>code</a>
-            <a class="row" id="delete" onclick={parent.remove}>Delete</a>
+            <a class="row control" id="close_edit" onclick={parent.close_edit}>close</a>
+            <a class="row control" id="refresh" onclick={parent.refresh}>refresh</a>
+            <a class="row control" id="code" onclick={parent.code}>code</a>
+            <a class="row control" id="delete" onclick={parent.remove}>Delete</a>
           </div>
           <!-- end of block control -->
           <div id="inner">

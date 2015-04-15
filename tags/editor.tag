@@ -241,10 +241,7 @@
     textarea{
       width:100%;
     }
-    label{
-      margin-top:5px;
-      margin-bottom:5px;
-    }
+    
     f {
       width: 100%;
       display: inline-block;
@@ -392,10 +389,6 @@
     textarea{
       width:100%;
     }
-    label{
-      margin-top:5px;
-      margin-bottom:5px;
-    }
     f {
       width: 100%;
       display: inline-block;
@@ -432,7 +425,7 @@
   <form>
 
     <label><b>Domain</b>
-      <p id="domain">{data.domain}</p>
+      <p id="domain">{data.domain || "https://intuitcorp.quickbase.com"}</p>
     </label>
 
     <label><b>Api type</b>
@@ -636,16 +629,18 @@
     position: absolute;
     margin-left: 2.5em;
   }
+  #list{font-size:0.5em;}
   </style>
   <a id="add" onclick={add_list_item}>+</a>
   <div id="list" name="list">
+
     <div class="item" each={item, i in data.list}>
       <button onclick={parent.delete_list_item}>-</button>
-      <p>
+
         <span id="numbering">{i+1}. </span>
         <raw class="content" contentEditable="true" onkeyup={parent.update_content} content="{item.content}"/>
-      </P>
     </div>
+
   </div>
   <p id="unsaved_api" hide={!saved}>unsaved changes: list</p>
   <script>
