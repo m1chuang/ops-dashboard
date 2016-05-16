@@ -24,7 +24,7 @@ y=gist.fetch('80cffc4fb8dfab253d6b');
 $.ajax({
   type: "GET",
   url: "https://api.github.com/gists/" + '80cffc4fb8dfab253d6b' +
-    '?access_token=625321acea99ec66170597ac3a029cab9199396e',
+    '?access_token={0}',
   success: function(data, err) {
     var dashboard_data = JSON.parse(data.files.dashboard_data_processing.content);
     setTimeout(function() {
