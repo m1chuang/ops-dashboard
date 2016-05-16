@@ -15,7 +15,7 @@ var qbapi = function(params) {
 	}; //eof get
 	if (false) {
 		this.get(params.domain +
-			"/db/main?a=API_Authenticate&username=mchuang&password=Nesh6502&hours=48", (
+			"/db/main?a=API_Authenticate&username={0}&password={1}}&hours=48", (
 				function(data) {
 					console.log(data)
 					this.auth_ticket = $(data).find('ticket')[0].innerHTML;
@@ -25,7 +25,7 @@ var qbapi = function(params) {
 qbapi.prototype.renew_auth_ticket = function(next) {
 	console.log("making renew auth_ticket api call")
 	this.get(this.domain +
-		"/db/main?a=API_Authenticate&username=mchuang&password=Nesh6502&hours=48", (
+		"/db/main?a=API_Authenticate&username={0}}&password={1}}&hours=48", (
 			function(data) {
 				console.log(data)
 				this.auth_ticket = $(data).find('ticket')[0].innerHTML;
@@ -47,8 +47,8 @@ qbapi.prototype.query = function(params) {
 var aims = new qbapi({
 	domain: "https://intuitcorp.quickbase.com",
 	dbId: "54xa5xi4",
-	appToken: "ek8d4acxepjmubgkjiypb6nkh9q",
-	auth_ticket: "7_bjua4xnj2_b2fvy4_k_a_wm8psicjjx57ybbbb3r6buz2mcgdux7w7gbbxsre3dyg3r6hr235pn"
+	appToken: "",
+	auth_ticket: ""
 })
 
 
@@ -56,17 +56,17 @@ var incident_table = {};
 var qb = new qbapi({
 	domain: "https://intuitcorp.quickbase.com",
 	dbId: "54xa5xi4",
-	appToken: "ek8d4acxepjmubgkjiypb6nkh9q",
-	auth_ticket: "7_bjua4xnj2_b2fvy4_k_a_wm8psicjjx57ybbbb3r6buz2mcgdux7w7gbbxsre3dyg3r6hr235pn"
+	appToken: "",
+	auth_ticket: ""
 });;
 rc.on("api:qb", function(params) {
 	console.log("api:qb");
 	qb = new qbapi({
 		domain: params.data.domain || "https://intuitcorp.quickbase.com",
 		dbId: params.data.db_id || "54xa5xi4",
-		appToken: params.data.app_token || "ek8d4acxepjmubgkjiypb6nkh9q",
+		appToken: params.data.app_token || "",
 		auth_ticket: params.data.auth_ticket ||
-			"7_bjua4xnj2_b2fvy4_k_a_wm8psicjjx57ybbbb3r6buz2mcgdux7w7gbbxsre3dyg3r6hr235pn"
+			""
 	});
 	qb.query({
 		field_raw: params.data.query ||
